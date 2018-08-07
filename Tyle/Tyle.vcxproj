@@ -115,6 +115,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Bloc.cpp" />
     <ClCompile Include="CityNode.cpp" />
     <ClCompile Include="CityNodeBlueprint.cpp" />
     <ClCompile Include="Cloister.cpp" />
@@ -126,6 +127,8 @@
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainTest.cpp" />
+    <ClCompile Include="MainTest2.cpp" />
+    <ClCompile Include="NeighborStack.cpp" />
     <ClCompile Include="Position.cpp" />
     <ClCompile Include="RoadNode.cpp" />
     <ClCompile Include="RoadNodeBlueprint.cpp" />
@@ -135,6 +138,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Array.h" />
+    <ClInclude Include="Bloc.h" />
     <ClInclude Include="CityNode.h" />
     <ClInclude Include="CityNodeBlueprint.h" />
     <ClInclude Include="Cloister.h" />
@@ -142,10 +146,13 @@
     <ClInclude Include="Drawer.h" />
     <ClInclude Include="FieldNode.h" />
     <ClInclude Include="FieldNodeBlueprint.h" />
+    <ClInclude Include="FieldPosition.h" />
     <ClInclude Include="first.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="MainTest.h" />
+    <ClInclude Include="MainTest2.h" />
+    <ClInclude Include="NeighborStack.h" />
     <ClInclude Include="Position.h" />
     <ClInclude Include="RoadNode.h" />
     <ClInclude Include="RoadNodeBlueprint.h" />
