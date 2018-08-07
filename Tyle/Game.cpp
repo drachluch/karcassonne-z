@@ -608,18 +608,32 @@ void Game::tiles_reach(const Position & p, IndexBlueprint indexBlueprint, const 
 
 	cloisters_reach(p, tb.hasCloister());
 
+	auto idxTile = tiles.length() - 1;
 	if (tb.getNumberOfRoadNodes() > 0)
-		roadnodes_reach(p, tiles.length() - 1);
+		roadnodes_reach(p, idxTile);
+	if (tb.getNumberOfCityNodes() > 0)
+		citynodes_reach(p, idxTile);
+	if (tb.getNumberOfFieldNodes() > 0)
+		fieldnodes_reach(p, idxTile);
+
+	if (tb.getNumberOfCityNodes() > 0)
+		citynodes_setNeighbors(idxTile);
+	if (tb.getNumberOfFieldNodes() > 0)
+		fieldnodes_setNeighbors(idxTile);
 }
 
 void Game::tiles_cancel() 
 {
 	const auto & t = tiles.pop();
-	const TileBlueprint & tb = getBlueprint(t.getIndexBlueprint());
+	const auto & tb = getBlueprint(t.getIndexBlueprint());
 
 	cloisters_cancel(positions.pop(), tb.hasCloister());
 	if (tb.getNumberOfRoadNodes() > 0)
 		roadnodes_cancel(tb.getNumberOfRoadNodes());
+	if (tb.getNumberOfCityNodes() > 0)
+		citynodes_cancel(tb.getNumberOfCityNodes());
+	if (tb.getNumberOfFieldNodes() > 0)
+		fieldnodes_cancel(tb.getNumberOfFieldNodes());
 	
 	inventory[t.indexBlueprint]++;
 
@@ -628,7 +642,7 @@ void Game::tiles_cancel()
 
 void Game::cloisters_reach(const Position & p, bool newCloister) 
 {
-	for (int i = 0; i < cloisters.length(); i++) {
+	for (auto i = 0; i < cloisters.length(); i++) {
 		auto & c = cloisters[i];
 		if (c.withinRange(p)) {
 			c.incrCompleteness();
@@ -646,7 +660,7 @@ void Game::cloisters_reach(const Position & p, bool newCloister)
 
 		const Position ps[8] = { p.east(), p.east().north(), p.east().south(), p.north(), p.west(), p.west().north(), p.west().south(), p.south() };
 
-		for (const Position & p : ps)
+		for (const auto & p : ps)
 			if (isOccupied(p))
 				c.incrCompleteness();
 
@@ -655,7 +669,7 @@ void Game::cloisters_reach(const Position & p, bool newCloister)
 
 void Game::cloisters_cancel(const Position & p, bool newCloister) 
 {
-	for (int i = 0; i < cloisters.length(); i++) {
+	for (auto i = 0; i < cloisters.length(); i++) {
 		auto & c = cloisters[i];
 		if (c.withinRange(p)) {
 			if (c.isCompleted() && c.hasDirectFollower()) {
@@ -685,7 +699,7 @@ void Game::roadnodes_reach(const Position & p, int idxTile)
 	int first = roadnodes.length();
 	int nbNodes = tb.getNumberOfRoadNodes();
 	roadnodes.addLength(nbNodes);
-	bool set[4] = { false, false, false, false };
+	bool set[MAX_ROADNODES_PER_TILE] = { false, false, false, false };
 
 	// initialisation des noeuds de route
 	for (int i = 0; i < 4; i++) {
@@ -701,9 +715,11 @@ void Game::roadnodes_reach(const Position & p, int idxTile)
 				// nbNodes > 1 => position ambigue
 				auto & bp = tb.getRoadNodeBlueprint(relativIdxRoadnode);
 
-				roadnodes[first + relativIdxRoadnode] = nbNodes > 1
-					? RoadNode(tb.getRoadNodeBlueprint(relativIdxRoadnode), idxTile)
-					: RoadNode(tb.getRoadNodeBlueprint(relativIdxRoadnode));
+				if (nbNodes > 1)
+					roadnodes[first + relativIdxRoadnode].reset(tb.getRoadNodeBlueprint(relativIdxRoadnode), idxTile);
+				else
+					roadnodes[first + relativIdxRoadnode].reset(tb.getRoadNodeBlueprint(relativIdxRoadnode));
+
 				set[relativIdxRoadnode] = true;
 			}
 		}
@@ -765,6 +781,224 @@ void Game::roadnodes_cancel(int nbNodes)
 
 }
 
+void Game::citynodes_reach(const Position & p, int idxTile)
+{
+	auto & t = tiles[idxTile];
+	auto & tb = getBlueprint(t.getIndexBlueprint());
+
+	auto first = citynodes.length();
+	auto nbNodes = tb.getNumberOfCityNodes();
+	citynodes.addLength(nbNodes);
+	bool set[MAX_CITYNODES_PER_TILE] = { false, false };
+
+	// initialisation des noeuds de ville
+	for (int i = 0; i < 4; i++) {
+		const Direction d{ i };
+		const Direction dTr = d.rotateTrigo(t.getDirection());
+
+		if (tb.getSideType(dTr) == SideType::City) {
+			auto relativIdxCitynode = tb.getCityNode(dTr);
+
+			t.setCityNode(d, first + relativIdxCitynode);
+
+			if (!set[relativIdxCitynode]) {
+				// nbNodes > 1 => position ambigue
+				auto & bp = tb.getCityNodeBlueprint(relativIdxCitynode);
+
+				if (nbNodes > 1)
+					citynodes[first + relativIdxCitynode].reset(tb.getCityNodeBlueprint(relativIdxCitynode), idxTile);
+				else
+					citynodes[first + relativIdxCitynode].reset(tb.getCityNodeBlueprint(relativIdxCitynode));
+
+				set[relativIdxCitynode] = true;
+			}
+		}
+	}
+
+	// interaction avec les noeuds des tuiles adjacentes
+	for (int i = 0; i < 4; i++) {
+		const Direction d{ i };
+
+		if (t.getSideType(d) == SideType::City) {
+			auto idxCitynode = t.getCityNode(d);
+			auto & cn = citynodes[idxCitynode];
+
+			int indexNextTile = getIndexPosition(p.next(d));
+			if (indexNextTile != -1) {
+
+				auto & rootNextCn = citynodes[getTile(indexNextTile).getCityNode(d.opposite())].getRoot();
+				auto & rootCurrentCn = cn.getRoot();
+
+				// you can't become your own father
+				// and nextRn.getRoot() can't be a child, because it's the result of getRoot()
+				if (&rootCurrentCn != &rootNextCn) {
+					rootCurrentCn.becomeFatherOf(&rootNextCn);
+				}
+			}
+		}
+	}
+
+	// décompte des points pour les routes terminées avec des partisans déjà dessus
+	for (auto relativIdxCitynode = 0; relativIdxCitynode < nbNodes; relativIdxCitynode++) {
+		auto & cn = citynodes[first + relativIdxCitynode];
+		if (!cn.hasFather() && cn.isCompleted() && cn.hasAnyFollower())
+			updateForCompleted(cn, scores, followers);
+	}
+}
+
+void Game::citynodes_setNeighbors(int idxTile)
+{
+	auto & t = tiles[idxTile];
+	auto & tb = getBlueprint(t.getIndexBlueprint());
+
+	auto nbNodes = tb.getNumberOfCityNodes();
+	
+	if (nbNodes == 1) {
+		setNeighborFields(citynodes.last(), tb.getCityNodeBlueprint(0), fieldnodes, fieldnodes.length() - tb.getNumberOfFieldNodes(), neighborFields);
+	}
+	else if (nbNodes == 2) {
+		auto first = citynodes.length() - nbNodes;
+		if (citynodes[first].getDepth() == 0) {
+			setNeighborFields(citynodes.last(), tb.getCityNodeBlueprint(1), fieldnodes, fieldnodes.length() - tb.getNumberOfFieldNodes(), neighborFields);
+			setNeighborFields(citynodes[first], tb.getCityNodeBlueprint(0), fieldnodes, fieldnodes.length() - tb.getNumberOfFieldNodes(), neighborFields);
+		}
+		else {
+			setNeighborFields(citynodes[first], tb.getCityNodeBlueprint(0), fieldnodes, fieldnodes.length() - tb.getNumberOfFieldNodes(), neighborFields);
+			setNeighborFields(citynodes.last(), tb.getCityNodeBlueprint(1), fieldnodes, fieldnodes.length() - tb.getNumberOfFieldNodes(), neighborFields);
+		}
+	}
+	else {
+		throw "communism is a lie";
+	}
+}
+
+// nbNodes > 0
+void Game::citynodes_cancel(int nbNodes)
+{
+	auto first = citynodes.length() - nbNodes;
+
+	for (auto relativIdxCityNode = 0; relativIdxCityNode < nbNodes; relativIdxCityNode++) {
+		auto & cn = citynodes[first + relativIdxCityNode];
+
+		if (cn.hasAnyFollower() && !cn.hasFather()) {
+			if (cn.hasDirectFollower()) {
+				cancelKnightOnCitynode(first + relativIdxCityNode);
+			}
+			else {
+				if (cn.isCompleted())
+					cancelUpdateForCompleted(cn, scores, followers);
+			}
+		}
+
+		cn.unlinkChildren();
+		neighborFields.freeSome(cn.getNeighborFields().length);
+	}
+
+	citynodes.addLength(-nbNodes);
+}
+
+void Game::fieldnodes_reach(const Position & p, int idxTile)
+{
+	auto & t = tiles[idxTile];
+	auto & tb = getBlueprint(t.getIndexBlueprint());
+
+	auto first = fieldnodes.length();
+	auto nbNodes = tb.getNumberOfFieldNodes();
+	fieldnodes.addLength(nbNodes);
+	bool set[MAX_FIELDNODES_PER_TILE] = { false, false, false, false };
+
+	// initialisation des noeuds de ville
+	for (int i = 0; i < 4; i++) {
+		const Direction d{ i };
+		const Direction dTr = d.rotateTrigo(t.getDirection());
+
+		if (tb.getSideType(dTr) == SideType::Field) {
+			auto relativIdxFieldnode = tb.getFieldNode(dTr);
+
+			t.setFieldNode(d, first + relativIdxFieldnode);
+
+			if (!set[relativIdxFieldnode]) {
+				fieldnodes[first + relativIdxFieldnode].reset();
+				set[relativIdxFieldnode] = true;
+			}
+		}
+	}
+
+	// interaction avec les noeuds des tuiles adjacentes
+	for (auto i = 0; i < 4; i++) {
+		const Direction d{ i };
+
+		if (t.getSideType(d) == SideType::Field) {
+			auto idxFieldnode = t.getFieldNode(d);
+			auto & fn = fieldnodes[idxFieldnode];
+
+			auto indexNextTile = getIndexPosition(p.next(d));
+			if (indexNextTile != -1) {
+
+				auto & rootNextFn = fieldnodes[getTile(indexNextTile).getFieldNode(d.opposite())].getRoot();
+				auto & rootCurrentFn = fn.getRoot();
+
+				// you can't become your own father
+				// and nextRn.getRoot() can't be a child, because it's the result of getRoot()
+				if (&rootCurrentFn != &rootNextFn) {
+					rootCurrentFn.becomeFatherOf(&rootNextFn);
+				}
+			}
+		}
+	}
+}
+
+
+// nbNodes > 0 !!
+void Game::fieldnodes_setNeighbors(int idxTile)
+{
+	auto & t = tiles[idxTile];
+	auto & tb = getBlueprint(t.getIndexBlueprint());
+
+	auto nbNodes = tb.getNumberOfFieldNodes();
+	auto firstCityIdx = citynodes.length() - tb.getNumberOfCityNodes();
+
+
+	if (nbNodes == 1) {
+		setNeighborCities(fieldnodes.last(), tb.getFieldNodeBlueprint(0), citynodes, firstCityIdx, neighborCities);
+	}
+	else {
+		// certains fieldnodes risquent d'être apparentés.
+		// il faut traiter les fils avant les pères, car le traitement des pères dépend du traitement des fils.
+		auto firstFieldIdx = fieldnodes.length() - nbNodes;
+		int depths[MAX_FIELDNODES_PER_TILE];
+		int maxDepth = 0;
+
+		for (auto relativIdxFieldNode = 0; relativIdxFieldNode < nbNodes; relativIdxFieldNode++) {
+			depths[relativIdxFieldNode] = fieldnodes[firstFieldIdx + relativIdxFieldNode].getDepth();
+			if (depths[relativIdxFieldNode] > maxDepth)
+				maxDepth = depths[relativIdxFieldNode];
+		}
+
+		for (auto currentDepth = maxDepth; currentDepth >= 0; currentDepth--)
+			for (auto relativIdxFieldNode = 0; relativIdxFieldNode < nbNodes; relativIdxFieldNode++)
+				if (depths[relativIdxFieldNode] == currentDepth)
+					setNeighborCities(fieldnodes[firstFieldIdx + relativIdxFieldNode], tb.getFieldNodeBlueprint(relativIdxFieldNode), citynodes, firstCityIdx, neighborCities);
+	}
+}
+
+void Game::fieldnodes_cancel(int nbNodes)
+{
+	auto first = fieldnodes.length() - nbNodes;
+
+	for (auto relativIdxFieldNode = 0; relativIdxFieldNode < nbNodes; relativIdxFieldNode++) {
+		auto & fn = fieldnodes[first + relativIdxFieldNode];
+
+		if (fn.hasDirectFollower())
+			cancelFarmerOnFieldnode(first + relativIdxFieldNode);
+
+		neighborCities.freeSome(fn.getNeighborCities().length);
+		fn.unlinkChildren();
+	}
+
+	fieldnodes.addLength(-nbNodes);
+}
+
 void Game::setThiefOnRoadnode(int indexRoadnode)
 {
 	auto & rn = roadnodes[indexRoadnode];
@@ -810,6 +1044,83 @@ void Game::cancelThiefOnRoadnode(int indexRoadnode)
 	}
 	else {
 		throw "Can't cancel thief";
+	}
+}
+
+void Game::setKnightOnCitynode(int indexCitynode)
+{
+	auto & cn = citynodes[indexCitynode];
+
+	if (cn.canSetKnight() && !cn.hasDirectFollower() && !followerLogs.last().hasFollower()) {
+		followerLogs.last().setKnight(tiles.last().getFirstDirectionOfCitynode(indexCitynode));
+
+		cn.setDirectFollower(currentPlayer);
+		if (cn.isCompleted()) {
+			// les points sont comptés, le partisan est placé puis immédiatement remis à la réserve.
+			scores[cn.getDirectFollower()] += cn.score();
+		}
+		else {
+			// les points ne sont pas comptés, le partisan est placé.
+			followers[cn.getDirectFollower()]--;
+		}
+
+	}
+	else {
+		throw "Can't set knight";
+	}
+}
+
+void Game::cancelKnightOnCitynode(int indexCitynode)
+{
+	auto & cn = citynodes[indexCitynode];
+
+	if (cn.canSetKnight() && cn.hasDirectFollower() && followerLogs.last().hasKnight()) {
+		followerLogs.last().setNoFollower();
+
+		if (cn.isCompleted()) {
+			// les points ont été comptés, le partisan n'est plus sur place
+			// le partisan est déjà libéré, et le score est rendu normal.
+			scores[cn.getDirectFollower()] -= cn.score();
+		}
+		else {
+			// les points n'ont pas été comptés, le partisan est toujours sur place
+			// donc le score ne change pas, et le partisan est libéré.
+			followers[cn.getDirectFollower()]++;
+		}
+
+		cn.setNoDirectFollower();
+	}
+	else {
+		throw "Can't cancel knight";
+	}
+}
+
+void Game::setFarmerOnFieldnode(int indexFieldnode)
+{
+	auto &fn = fieldnodes[indexFieldnode];
+
+	if (fn.canSetFarmer() && !fn.hasDirectFollower() && !followerLogs.last().hasFollower()) {
+		followerLogs.last().setFarmer(tiles.last().getFirstDirectionOfFieldnode(indexFieldnode));
+
+		fn.setDirectFollower(currentPlayer);
+
+	}
+	else {
+		throw "Can't set farmer";
+	}
+}
+
+void Game::cancelFarmerOnFieldnode(int indexFieldnode)
+{
+	auto & fn = fieldnodes[indexFieldnode];
+
+	if (fn.canSetFarmer() && fn.hasDirectFollower() && followerLogs.last().hasFarmer()) {
+		followerLogs.last().setNoFollower();
+
+		fn.setNoDirectFollower();
+	}
+	else {
+		throw "Can't cancel farmer";
 	}
 }
 
@@ -1019,6 +1330,112 @@ void Game::cancelThief(int wayThief)
 	}
 }
 
+int Game::waysToSetKnight() const
+{
+	auto nbNodes = getBlueprint(tiles.last().getIndexBlueprint()).getNumberOfCityNodes();
+	auto first = citynodes.length() - nbNodes;
+	auto ways = 0;
+
+	for (auto relativIdxCitynode = 0; relativIdxCitynode < nbNodes; relativIdxCitynode++)
+		if (citynodes[first + relativIdxCitynode].canSetKnight())
+			ways++;
+
+	return ways;
+}
+
+void Game::setKnight(int wayKnight)
+{
+	int nbNodes = getBlueprint(tiles.last().getIndexBlueprint()).getNumberOfCityNodes();
+	int first = citynodes.length() - nbNodes;
+	int ways = 0;
+
+	for (int relativIdxCitynode = 0; relativIdxCitynode < nbNodes; relativIdxCitynode++) {
+		auto & cn = citynodes[first + relativIdxCitynode];
+		if (cn.canSetKnight()) {
+			if (ways == wayKnight) {
+
+				setKnightOnCitynode(first + relativIdxCitynode);
+				return;
+			}
+
+			ways++;
+		}
+	}
+}
+
+void Game::cancelKnight(int wayKnight)
+{
+	int nbNodes = getBlueprint(tiles.last().getIndexBlueprint()).getNumberOfCityNodes();
+	int first = citynodes.length() - nbNodes;
+	int ways = 0;
+
+	for (int relativIdxCitynode = 0; relativIdxCitynode < nbNodes; relativIdxCitynode++) {
+		auto & cn = citynodes[first + relativIdxCitynode];
+		if (cn.canSetKnight()) {
+			if (ways == wayKnight) {
+
+				cancelKnightOnCitynode(first + relativIdxCitynode);
+				return;
+			}
+
+			ways++;
+		}
+	}
+}
+
+int Game::waysToSetFarmer() const
+{
+	auto nbNodes = getBlueprint(tiles.last().getIndexBlueprint()).getNumberOfFieldNodes();
+	auto first = fieldnodes.length() - nbNodes;
+	auto ways = 0;
+
+	for (auto relativIdxFieldnode = 0; relativIdxFieldnode < nbNodes; relativIdxFieldnode++)
+		if (fieldnodes[first + relativIdxFieldnode].canSetFarmer())
+			ways++;
+
+	return ways;
+}
+
+void Game::setFarmer(int wayFarmer)
+{
+	int nbNodes = getBlueprint(tiles.last().getIndexBlueprint()).getNumberOfFieldNodes();
+	int first = fieldnodes.length() - nbNodes;
+	int ways = 0;
+
+	for (int relativIdxFieldnode = 0; relativIdxFieldnode < nbNodes; relativIdxFieldnode++) {
+		auto & fn = fieldnodes[first + relativIdxFieldnode];
+		if (fn.canSetFarmer()) {
+			if (ways == wayFarmer) {
+
+				setFarmerOnFieldnode(first + relativIdxFieldnode);
+				return;
+			}
+
+			ways++;
+		}
+	}
+}
+
+void Game::cancelFarmer(int wayFarmer)
+{
+	int nbNodes = getBlueprint(tiles.last().getIndexBlueprint()).getNumberOfFieldNodes();
+	int first = fieldnodes.length() - nbNodes;
+	int ways = 0;
+
+	for (int relativIdxFieldnode = 0; relativIdxFieldnode < nbNodes; relativIdxFieldnode++) {
+		auto & fn = fieldnodes[first + relativIdxFieldnode];
+		if (fn.canSetFarmer()) {
+			if (ways == wayFarmer) {
+
+				cancelFarmerOnFieldnode(first + relativIdxFieldnode);
+				return;
+			}
+
+			ways++;
+		}
+	}
+}
+
 void Game::cancel()
 {
 	const auto & lastP = positions.last();
@@ -1054,5 +1471,58 @@ void Game::end()
 
 }
 
+void setNeighborFields(CityNode & cn, const CityNodeBlueprint & cnb, const Array<FieldNode, NUMBER_OF_FIELDNODES>& fieldnodes, int firstField, NeighborStack<char, MAX_NUMBER_INDEX_NEIGHBOR_FIELDS>& neighborFields)
+{
+	BlocStaticSorted<char, NUMBER_OF_FIELDNODES> cumulatedAdjacentFieldNodes;
+	auto nbAdjacentFieldNodes = cnb.getNumberAdjacentFieldNodes();
 
+	if (nbAdjacentFieldNodes > 0) {
+		const int * p = cnb.getAdjacentFieldNodes();
+		for (auto i = 0; i < nbAdjacentFieldNodes; i++)
+			cumulatedAdjacentFieldNodes.insert(fieldnodes.getIndex(&fieldnodes[p[i] + firstField].getRoot()));
+	}
 
+	auto sons = cn.getChildren();
+
+	for (auto idxSonWithinFather = 0; idxSonWithinFather < sons.length(); idxSonWithinFather++) {
+		auto & cnSon = *sons[idxSonWithinFather];
+		auto & blocSonAdjacentFieldNodes = cnSon.getNeighborFields();
+		for (auto idxSonAdjacentFieldNode = 0; idxSonAdjacentFieldNode < blocSonAdjacentFieldNodes.length; idxSonAdjacentFieldNode++)
+			cumulatedAdjacentFieldNodes.insert(fieldnodes.getIndex(&fieldnodes[blocSonAdjacentFieldNodes[idxSonAdjacentFieldNode]].getRoot()));
+	}
+
+	auto bloc = neighborFields.getSome(cumulatedAdjacentFieldNodes.length());
+	// copy of sorted cumulatedAdjacentFieldNodes
+	for (auto i = 0; i < bloc.length; i++)
+		bloc[i] = cumulatedAdjacentFieldNodes[i];
+
+	cn.setNeighborFields(bloc);
+}
+
+void setNeighborCities(FieldNode & fn, const FieldNodeBlueprint & fnb, const Array<CityNode, NUMBER_OF_CITYNODES> & citynodes, int firstCity, NeighborStack<char, MAX_NUMBER_INDEX_NEIGHBOR_CITIES> & neighborCities)
+{
+	BlocStaticSorted<char, NUMBER_OF_CITYNODES> cumulatedAdjacentCityNodes;
+	auto nbAdjacentCityNodes = fnb.getNumberAdjacentCityNodes();
+
+	if (nbAdjacentCityNodes > 0) {
+		const int * p = fnb.getAdjacentCityNodes();
+		for (auto i = 0; i < nbAdjacentCityNodes; i++)
+			cumulatedAdjacentCityNodes.insert(citynodes.getIndex(&citynodes[p[i] + firstCity].getRoot()));
+	}
+
+	auto sons = fn.getChildren();
+
+	for (auto idxSonWithinFather = 0; idxSonWithinFather < sons.length(); idxSonWithinFather++) {
+		auto & fnSon = *sons[idxSonWithinFather];
+		auto & blocSonAdjacentCityNodes = fnSon.getNeighborCities();
+		for (auto idxSonAdjacentFieldNode = 0; idxSonAdjacentFieldNode < blocSonAdjacentCityNodes.length; idxSonAdjacentFieldNode++)
+			cumulatedAdjacentCityNodes.insert(citynodes.getIndex(&citynodes[blocSonAdjacentCityNodes[idxSonAdjacentFieldNode]].getRoot()));
+	}
+
+	auto bloc = neighborCities.getSome(cumulatedAdjacentCityNodes.length());
+	// copy of sorted cumulatedAdjacentFieldNodes
+	for (auto i = 0; i < bloc.length; i++)
+		bloc[i] = cumulatedAdjacentCityNodes[i];
+
+	fn.setNeighborCities(bloc);
+}

@@ -2,6 +2,7 @@
 #include "SideType.h"
 #include "TileBlueprint.h"
 #include "Direction.h"
+#include "FieldPosition.h"
 
 struct Side {
 	SideType side;
@@ -52,12 +53,37 @@ struct Tile {
 	void setRightFieldNode(const Direction & d, int fn)  { sides[d.get()].rightFieldNode = fn; }
 
 
-	const Direction & getFirstDirectionOfRoadnode(int indexRoadnode) const {
+	Direction getFirstDirectionOfRoadnode(int indexRoadnode) const {
 		for (int i = 0; i < 4; i++)
 			if (sides[i].side == SideType::Road)
 				if (sides[i].roadNode == indexRoadnode)
 					return Direction{ i };
 		throw "IndexRoadnode not found in tile.";
+	}
+
+	Direction getFirstDirectionOfCitynode(int indexCitynode) const {
+		for (int i = 0; i < 4; i++)
+			if (sides[i].side == SideType::City)
+				if (sides[i].cityNode == indexCitynode)
+					return Direction{ i };
+		throw "IndexCitynode not found in tile.";
+	}
+
+	CompleteFieldPosition getFirstDirectionOfFieldnode(int indexFieldnode) const {
+		for (int i = 0; i < 4; i++)
+			if (sides[i].side == SideType::Field) {
+				if (sides[i].fieldNode == indexFieldnode)
+					return CompleteFieldPosition{ Direction{i}, FieldPosition::Center };
+			}
+			else
+				if (sides[i].side == SideType::Road) {
+					if (sides[i].leftFieldNode == indexFieldnode)
+						return CompleteFieldPosition{ Direction{i}, FieldPosition::Left };
+					else
+						if (sides[i].rightFieldNode == indexFieldnode)
+							return CompleteFieldPosition{ Direction{i}, FieldPosition::Right };
+				}
+		throw "IndexFieldnode not found in tile.";
 	}
 
 };

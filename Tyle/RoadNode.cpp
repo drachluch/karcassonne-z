@@ -1,48 +1,48 @@
 #include "RoadNode.h"
 #include <string>
 
-RoadNode::RoadNode(const RoadNodeBlueprint & rnb)
-	: holes(rnb.getNumberOfHoles())
+void RoadNode::reset(const RoadNodeBlueprint & rnb)
 {
-	memset(cumulatedFollowers, 0, sizeof(cumulatedFollowers));
+	father = nullptr;
+
+	sons.cleanse();
+
+	garbageDirectFollower = -2;
+	cumulatedFollowers.reset(0);
+
+	coveredTiles = 1;
+	holes = rnb.getNumberOfHoles();
+
+	ambigiousPosition = -1;
 }
 
-RoadNode::RoadNode(const RoadNodeBlueprint & rnb, int idxTile)
-	: holes(rnb.getNumberOfHoles()), ambigiousPosition(idxTile)
+void RoadNode::reset(const RoadNodeBlueprint & rnb, int idxTile)
 {
-	memset(cumulatedFollowers, 0, sizeof(cumulatedFollowers));
-}
+	father = nullptr;
 
-RoadNode & RoadNode::operator=(const RoadNode & rn)
-{
-	father = rn.father;
-	numberOfSons = rn.numberOfSons;
-	memcpy(sons, rn.sons, sizeof(sons));
-	garbageDirectFollower = rn.garbageDirectFollower;
-	memcpy(cumulatedFollowers, rn.cumulatedFollowers, sizeof(cumulatedFollowers));
-	coveredTiles = rn.coveredTiles;
-	holes = rn.holes;
-	ambigiousPosition = rn.ambigiousPosition;
-	
-	return *this;
+	sons.cleanse();
+
+	garbageDirectFollower = -2;
+	cumulatedFollowers.reset(0);
+
+	coveredTiles = 1;
+	holes = rnb.getNumberOfHoles();
+
+	ambigiousPosition = idxTile;
+
 }
 
 // don't use the roadnode after unlinking the children
 void RoadNode::unlinkChildren()
 {
-	for (int i = 0; i < numberOfSons; i++)
+	for (int i = 0; i < sons.length(); i++)
 		sons[i]->father = nullptr;
 }
 
 // son has no father
 void RoadNode::becomeFatherOf(RoadNode * son)
 {
-
-	if (numberOfSons < 0 && numberOfSons > 2)
-		throw "number of sons not acceptable";
-
-	sons[numberOfSons] = son;
-	numberOfSons++;
+	sons.push(son);
 	son->father = this;
 
 	// holes §§ une fusion a eu lieu, donc deux trous ont été bouchés.
@@ -52,8 +52,7 @@ void RoadNode::becomeFatherOf(RoadNode * son)
 	if (son->hasAnyFollower()) {
 		if (garbageDirectFollower == -2)
 			garbageDirectFollower = -1;
-		for (int i = 0; i < NUMBER_OF_PLAYERS; i++)
-			cumulatedFollowers[i] += son->cumulatedFollowers[i];
+		cumulatedFollowers = son->cumulatedFollowers;
 	}
 
 	// coveredTiles

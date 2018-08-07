@@ -15,9 +15,7 @@ enum class OptionFollowerType {
 	None, Thief, Knight, Monk, Farmer
 };
 
-enum class FieldPosition {
-	Center, Right, Left
-};
+#include "FieldPosition.h"
 
 class FollowerLog {
 	OptionFollowerType type = OptionFollowerType::None;
@@ -31,7 +29,7 @@ public:
 	void setMonk() { type = OptionFollowerType::Monk; }
 	void setThief(const Direction & d) { type = OptionFollowerType::Thief; dir = d; }
 	void setKnight(const Direction & d) { type = OptionFollowerType::Knight; dir = d; }
-	void setFarmer(const Direction & d, const FieldPosition fp) { type = OptionFollowerType::Farmer; dir = d; hd = fp; }
+	void setFarmer(const CompleteFieldPosition & cfp) { type = OptionFollowerType::Farmer; dir = cfp.direction; hd = cfp.fieldPosition; }
 
 	bool hasFollower() const { return type != OptionFollowerType::None; }
 	bool hasThief() const { return type == OptionFollowerType::Thief; }

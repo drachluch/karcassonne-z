@@ -9,7 +9,10 @@
 #include "Array.h"
 
 #include "RoadNode.h"
+#include "CityNode.h"
+#include "FieldNode.h"
 
+#include "NeighborStack.h"
 
 class Game
 {
@@ -28,7 +31,13 @@ class Game
 	Array<Tile, NUMBER_OF_TILES> tiles;
 	Array<Position, NUMBER_OF_TILES> positions;
 	Array<FollowerLog, NUMBER_OF_TILES> followerLogs;
+
 	Array<RoadNode, NUMBER_OF_ROADNODES> roadnodes;
+	Array<CityNode, NUMBER_OF_CITYNODES> citynodes;
+	Array<FieldNode, NUMBER_OF_FIELDNODES> fieldnodes;
+
+	NeighborStack<char, MAX_NUMBER_INDEX_NEIGHBOR_CITIES> neighborCities;
+	NeighborStack<char, MAX_NUMBER_INDEX_NEIGHBOR_FIELDS> neighborFields;
 
 	Array<Position, 2 * NUMBER_OF_TILES + 2> reachablePositions;
 	Array<ReachablePositionLog, NUMBER_OF_TILES> reachableLogs;
@@ -47,12 +56,28 @@ class Game
 	void cloisters_reach(const Position & p, bool newCloister) ;
 	void cloisters_cancel(const Position & p, bool newCloister) ;
 
-	void roadnodes_reach(const Position & p, int idxTile);
 	// nbNodes > 0
-	void roadnodes_cancel(int nbNodes) ;
+	void roadnodes_reach(const Position & p, int idxTile);
+	void roadnodes_cancel(int nbNodes);
+
+	// nbNodes > 0
+	void citynodes_reach(const Position & p, int idxTile);
+	void citynodes_setNeighbors(int idxTile);
+	void citynodes_cancel(int nbNodes);
+
+	// nbFields > 0
+	void fieldnodes_reach(const Position & p, int idxTile);
+	void fieldnodes_setNeighbors(int idxTile);
+	void fieldnodes_cancel(int nbNodes);
 
 	void setThiefOnRoadnode(int indexRoadnode);
 	void cancelThiefOnRoadnode(int indexRoadnode);
+
+	void setKnightOnCitynode(int indexCitynode);
+	void cancelKnightOnCitynode(int indexCitynode);
+
+	void setFarmerOnFieldnode(int indexFieldnode);
+	void cancelFarmerOnFieldnode(int indexFieldnode);
 
 	void discardedBlueprints_reach() ;
 	void discardedBlueprints_cancel() ;
@@ -61,7 +86,7 @@ class Game
 
 public:
 	Game();
-	~Game()=default;
+	~Game() = default;
 
 	IndexBlueprint nextBlueprintIndex();
 	const TileBlueprint & getBlueprint(IndexBlueprint i) const {
@@ -81,6 +106,8 @@ public:
 	const Tile & getTile(int i) const  { return tiles[i]; }
 	const Cloister & getCloister(int i) const  { return cloisters[i]; }
 	const RoadNode & getRoadNode(int i) const  { return roadnodes[i]; }
+	const CityNode & getCityNode(int i) const { return citynodes[i]; }
+	const FieldNode & getFieldNode(int i) const { return fieldnodes[i]; }
 
 	int getNumberReachablePositions() const  { return reachablePositions.length(); }
 	// getNumberPositions() == getNumberTiles()
@@ -89,6 +116,8 @@ public:
 	int getNumberTiles() const  { return tiles.length(); }
 	int getNumberCloisters() const  { return cloisters.length(); }
 	int getNumberRoadNodes() const  { return roadnodes.length(); }
+	int getNumberCityNodes() const { return citynodes.length(); }
+	int getNumberFieldNodes() const { return fieldnodes.length(); }
 
 	const FollowerLog & getFollowerLog(int i) const { return followerLogs[i]; }
 	
@@ -103,13 +132,21 @@ public:
 	bool canSetTile(const Position & p, const TileBlueprint & tb, const Direction & direction) const ;
 	bool canSetTile(int indexReachablePosition, IndexBlueprint indexBlueprint, const Direction & direction) const  { return canSetTile(getReachablePosition(indexReachablePosition), getBlueprint(indexBlueprint), direction); }
 
-	bool canSetMonk() const ;
-	void setMonk() ;
-	void cancelMonk() ;
+	bool canSetMonk() const;
+	void setMonk();
+	void cancelMonk();
 
-	int waysToSetThief() const ;
-	void setThief(int wayThief) ;
-	void cancelThief(int wayThief) ;
+	int waysToSetThief() const;
+	void setThief(int wayThief);
+	void cancelThief(int wayThief);
+
+	int waysToSetKnight() const;
+	void setKnight(int wayKnight);
+	void cancelKnight(int wayKnight);
+
+	int waysToSetFarmer() const;
+	void setFarmer(int wayFarmer);
+	void cancelFarmer(int wayFarmer);
 
 	int getCurrentPlayer() const  { return currentPlayer; }
 	void nextPlayer()  { currentPlayer = (currentPlayer + 1) % NUMBER_OF_PLAYERS; }
@@ -129,3 +166,5 @@ public:
 
 
 
+void setNeighborFields(CityNode & cn, const CityNodeBlueprint & cnb, const Array<FieldNode, NUMBER_OF_FIELDNODES> & fieldnodes, int firstField, NeighborStack<char, MAX_NUMBER_INDEX_NEIGHBOR_FIELDS> & neighborFields);
+void setNeighborCities(FieldNode & fn, const FieldNodeBlueprint & fnb, const Array<CityNode, NUMBER_OF_CITYNODES> & citynodes, int firstCity, NeighborStack<char, MAX_NUMBER_INDEX_NEIGHBOR_CITIES> & neighborCities);

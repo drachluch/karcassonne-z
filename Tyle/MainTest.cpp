@@ -26,7 +26,7 @@ void cloisterOnePlayer()
 						g.setMonk();
 
 					//float t_score = exploreTheFuture_cloisterOnePlayer(g, 0);
-					float t_score = (int) evaluateCloistersState(g);
+					float t_score = (float) evaluateCloistersState(g);
 
 					g.cancel();
 
@@ -316,7 +316,7 @@ float exploreTheFuture_roadnodeOnePlayer(Game & g, int depth)
 
 float evaluateRoadnodesState(const Game & g)
 {
-	float score = (int) g.getScore(0);
+	float score = (float) g.getScore(0);
 
 	for (int idxRoadnode = 0, l = g.getNumberRoadNodes(); idxRoadnode < l; idxRoadnode++) {
 		const RoadNode & rn = g.getRoadNode(idxRoadnode);
@@ -442,7 +442,7 @@ void bothOnePlayer()
 
 float evaluateBothState(const Game & g)
 {
-	float score = (int)g.getScore(0);
+	float score = (float)g.getScore(0);
 
 	for (int idxRoadnode = 0, l = g.getNumberRoadNodes(); idxRoadnode < l; idxRoadnode++) {
 		const RoadNode & rn = g.getRoadNode(idxRoadnode);

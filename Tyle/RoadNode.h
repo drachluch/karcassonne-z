@@ -1,13 +1,15 @@
 #pragma once
 #include "first.h"
 #include "RoadNodeBlueprint.h"
-#include <algorithm>
+#include "Bloc.h"
+#include "Array.h"
 
 class RoadNode
 {
+	static const int maxNumberOfSons = 3;
+
 	RoadNode * father = nullptr;
-	int numberOfSons = 0;
-	RoadNode * sons[3] = { nullptr, nullptr, nullptr };
+	Array<RoadNode*, maxNumberOfSons> sons;
 
 	// garbageDirectFollower :
 	// * {-2} : no followers.
@@ -15,7 +17,7 @@ class RoadNode
 	// * [0 ; NUMBER_OF_PLAYERS[ : only one follower, which has been added on this node when it was set, and specify the owner of the follower.
 	int garbageDirectFollower = -2;
 
-	int cumulatedFollowers[NUMBER_OF_PLAYERS];
+	BlocStatic<int, NUMBER_OF_PLAYERS> cumulatedFollowers = { 0 };
 
 	int coveredTiles = 1;
 	int holes = 0;
@@ -30,15 +32,13 @@ public:
 	// nécessaire pour l'allocation statique
 	RoadNode() = default;
 	
-	// défini le nombre de trous
-	RoadNode(const RoadNodeBlueprint & rnb);
-
-	// défini le nombre de trous et le fait que la position du noeud est ambigue.
-	RoadNode(const RoadNodeBlueprint & rnb, int idxTile);
-	
 	~RoadNode() = default;
 
-	RoadNode & operator=(const RoadNode &rn);
+	// défini le nombre de trous
+	void reset(const RoadNodeBlueprint & rnb);
+	
+	// défini le nombre de trous et le fait que la position du noeud est ambigue.
+	void reset(const RoadNodeBlueprint & rnb, int idxTile);
 	
 	bool hasFather() const { return father != nullptr; }
 	RoadNode & getRoot() { return father != nullptr ? father->getRoot() : *this; }
@@ -80,15 +80,9 @@ public:
 		garbageDirectFollower = -2;
 	}
 
-	int getMaxFollower() const {
-		int maxF = cumulatedFollowers[0];
-		for (int i = 1; i < NUMBER_OF_PLAYERS; i++)
-			if (cumulatedFollowers[i] > maxF)
-				maxF = cumulatedFollowers[i];
-		return maxF;
-	}
-
+	int getMaxFollower() const { return cumulatedFollowers.max(); }
 	int getCumulatedFollower(int index) const { return cumulatedFollowers[index]; }
+
 	bool canSetThief() const { return !hasFather() && garbageDirectFollower != -1; }
 
 

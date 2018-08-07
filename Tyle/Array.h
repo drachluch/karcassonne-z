@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 
 template <typename T, int L>
@@ -9,6 +10,12 @@ private:
 public:
 	Array() = default;
 	~Array() = default;
+
+	Array & operator=(const Array & arr) {
+		_length = arr._length;
+		memcpy(ts, arr.ts, sizeof(ts));
+		return *this;
+	}
 	
 	int length() const { return _length; }
 
@@ -53,6 +60,14 @@ public:
 			throw "Array : empty, can't pop";
 		_length--;
 		return ts[_length];
+	}
+
+	void cleanse() {
+		_length = 0;
+	}
+
+	int getIndex(const T * p) const {
+		return (int) (p - ts);
 	}
 };
 

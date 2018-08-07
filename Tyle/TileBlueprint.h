@@ -47,9 +47,7 @@ public:
 
 	int getCityNode(const Direction & d) const  { return sides[d.get()].cityNode; }
 	
-	int getRoadNode(const Direction & d) const  {
-		return sides[d.get()].roadNode;
-	}
+	int getRoadNode(const Direction & d) const  { return sides[d.get()].roadNode; }
 
 
 	int getFieldNode(const Direction & d) const  { return sides[d.get()].fieldNode; }
