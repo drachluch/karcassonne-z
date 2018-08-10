@@ -1,6 +1,8 @@
 #include "Game.h"
 #include <string>
 
+namespace Karcassonne {
+
 const TileBlueprint Game::blueprints[NUMBER_OF_DISTINCT_TILES] = {
 	TileBlueprint{
 	"1aFefnowxst",
@@ -1525,4 +1527,7 @@ void setNeighborCities(FieldNode & fn, const FieldNodeBlueprint & fnb, const Arr
 		bloc[i] = cumulatedAdjacentCityNodes[i];
 
 	fn.setNeighborCities(bloc);
+}
+
+
 }

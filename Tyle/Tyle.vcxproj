@@ -129,6 +129,7 @@
     <ClCompile Include="MainTest.cpp" />
     <ClCompile Include="MainTest2.cpp" />
     <ClCompile Include="NeighborStack.cpp" />
+    <ClCompile Include="NodeContainer.cpp" />
     <ClCompile Include="Position.cpp" />
     <ClCompile Include="RoadNode.cpp" />
     <ClCompile Include="RoadNodeBlueprint.cpp" />
@@ -153,6 +154,7 @@
     <ClInclude Include="MainTest.h" />
     <ClInclude Include="MainTest2.h" />
     <ClInclude Include="NeighborStack.h" />
+    <ClInclude Include="NodeContainer.h" />
     <ClInclude Include="Position.h" />
     <ClInclude Include="RoadNode.h" />
     <ClInclude Include="RoadNodeBlueprint.h" />

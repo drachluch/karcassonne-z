@@ -3,13 +3,13 @@
 #include <iostream>
 
 
-float evaluateCitiesRoadsAndCloistersState(const Game & g);
+float evaluateCitiesRoadsAndCloistersState(const Karcassonne::Game & g);
 
 //
 
 void citiesRoadsAndCloisters_OnePlayer()
 {
-	Game g;
+	Karcassonne::Game g;
 
 	for (int xx = 0; xx < 72 && g.hasRemainingBlueprint(); xx++) {
 		int idxBlueprint = g.nextBlueprintIndex();
@@ -131,17 +131,17 @@ void citiesRoadsAndCloisters_OnePlayer()
 
 
 	//*
-	writeHTMLHeader(std::cout);
+	Karcassonne::writeHTMLHeader(std::cout);
 	std::cout << "<body><script language=\"javascript\">var state=";
-	writeCurrentState(std::cout, g);
+	Karcassonne::writeCurrentState(std::cout, g);
 	std::cout << ";var followers =";
-	writeFollowers(std::cout, g);
+	Karcassonne::writeFollowers(std::cout, g);
 	std::cout << ";K.showLogState20180729(\"first\",state,followers);</script></body></html>";
 	//*/
 
 }
 
-float evaluateCitiesRoadsAndCloistersState(const Game & g)
+float evaluateCitiesRoadsAndCloistersState(const Karcassonne::Game & g)
 {
 	auto score = (float)g.getScore(0);
 

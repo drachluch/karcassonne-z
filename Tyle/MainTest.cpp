@@ -5,7 +5,7 @@
 
 void cloisterOnePlayer()
 {
-	Game g;
+	Karcassonne::Game g;
 
 	for (int xx = 0; xx < 72 && g.hasRemainingBlueprint(); xx++) {
 		int idxBlueprint = g.nextBlueprintIndex();
@@ -54,11 +54,11 @@ void cloisterOnePlayer()
 	std::cerr << g.getScore(0) << std::endl;
 
 
-	writeHTMLHeader(std::cout);
+	Karcassonne::writeHTMLHeader(std::cout);
 	std::cout << "<body><script language=\"javascript\">var state=";
-	writeCurrentState(std::cout, g);
+	Karcassonne::writeCurrentState(std::cout, g);
 	std::cout << ";var followers =";
-	writeFollowers(std::cout, g);
+	Karcassonne::writeFollowers(std::cout, g);
 	std::cout << ";K.showLogState20180729(\"first\",state,followers);</script></body></html>";
 
 }
@@ -68,7 +68,7 @@ void cloisterOnePlayer()
 
 // en situation standard (hors tentative de prédiction), le blueprint à placer est aléatoire.
 // donc on calcule le score max pour chaque blueprint, puis on agrège en prenant la moyenne des scores.
-float exploreTheFuture_cloisterOnePlayer(Game & g, int depth)
+float exploreTheFuture_cloisterOnePlayer(Karcassonne::Game & g, int depth)
 {
 	if (depth < 0)
 		throw "Depth can't be strictly negative.";
@@ -132,7 +132,7 @@ float exploreTheFuture_cloisterOnePlayer(Game & g, int depth)
 }
 
 
-int evaluateCloistersState(const Game & g) {
+int evaluateCloistersState(const Karcassonne::Game & g) {
 	int score = 0;
 	for (int i = 0, l = g.getNumberCloisters(); i < l; i++) {
 		const auto & c = g.getCloister(i);
@@ -144,7 +144,7 @@ int evaluateCloistersState(const Game & g) {
 
 void roadnodeOnePlayer()
 {
-	Game g;
+	Karcassonne::Game g;
 
 	for (int xx = 0; xx < 72 && g.hasRemainingBlueprint(); xx++) {
 		int idxBlueprint = g.nextBlueprintIndex();
@@ -224,16 +224,16 @@ void roadnodeOnePlayer()
 
 
 	//*
-	writeHTMLHeader(std::cout);
+	Karcassonne::writeHTMLHeader(std::cout);
 	std::cout << "<body><script language=\"javascript\">var state=";
-	writeCurrentState(std::cout, g);
+	Karcassonne::writeCurrentState(std::cout, g);
 	std::cout << ";var followers =";
-	writeFollowers(std::cout, g);
+	Karcassonne::writeFollowers(std::cout, g);
 	std::cout << ";K.showLogState20180729(\"first\",state,followers);</script></body></html>";
 	//*/
 }
 
-float exploreTheFuture_roadnodeOnePlayer(Game & g, int depth)
+float exploreTheFuture_roadnodeOnePlayer(Karcassonne::Game & g, int depth)
 {
 	if (depth < 0)
 		throw "Depth can't be strictly negative.";
@@ -314,7 +314,7 @@ float exploreTheFuture_roadnodeOnePlayer(Game & g, int depth)
 		: evaluateRoadnodesState(g);
 }
 
-float evaluateRoadnodesState(const Game & g)
+float evaluateRoadnodesState(const Karcassonne::Game & g)
 {
 	float score = (float) g.getScore(0);
 
@@ -329,7 +329,7 @@ float evaluateRoadnodesState(const Game & g)
 
 void bothOnePlayer()
 {
-	Game g;
+	Karcassonne::Game g;
 
 	for (int xx = 0; xx < 72 && g.hasRemainingBlueprint(); xx++) {
 		int idxBlueprint = g.nextBlueprintIndex();
@@ -430,17 +430,17 @@ void bothOnePlayer()
 
 
 	//*
-	writeHTMLHeader(std::cout);
+	Karcassonne::writeHTMLHeader(std::cout);
 	std::cout << "<body><script language=\"javascript\">var state=";
-	writeCurrentState(std::cout, g);
+	Karcassonne::writeCurrentState(std::cout, g);
 	std::cout << ";var followers =";
-	writeFollowers(std::cout, g);
+	Karcassonne::writeFollowers(std::cout, g);
 	std::cout << ";K.showLogState20180729(\"first\",state,followers);</script></body></html>";
 	//*/
 
 }
 
-float evaluateBothState(const Game & g)
+float evaluateBothState(const Karcassonne::Game & g)
 {
 	float score = (float)g.getScore(0);
 
