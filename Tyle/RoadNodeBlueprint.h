@@ -1,8 +1,11 @@
 #pragma once
 
-struct RoadNodeBlueprint {
-	int holes;
+namespace kar {
 
-	int getNumberOfHoles() const  { return holes; }
-};
+	struct RoadNodeBlueprint {
+		int holes;
 
+		int getNumberOfHoles() const { return holes; }
+	};
+
+}

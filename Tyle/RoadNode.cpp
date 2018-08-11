@@ -1,73 +1,75 @@
 #include "RoadNode.h"
 #include <string>
 
-void RoadNode::reset(const RoadNodeBlueprint & rnb)
-{
-	father = nullptr;
+namespace kar {
 
-	sons.cleanse();
+	void RoadNode::reset(const RoadNodeBlueprint & rnb)
+	{
+		father = nullptr;
 
-	garbageDirectFollower = -2;
-	cumulatedFollowers.reset(0);
+		sons.cleanse();
 
-	coveredTiles = 1;
-	holes = rnb.getNumberOfHoles();
+		garbageDirectFollower = -2;
+		cumulatedFollowers.reset(0);
 
-	ambigiousPosition = -1;
-}
+		coveredTiles = 1;
+		holes = rnb.getNumberOfHoles();
 
-void RoadNode::reset(const RoadNodeBlueprint & rnb, int idxTile)
-{
-	father = nullptr;
-
-	sons.cleanse();
-
-	garbageDirectFollower = -2;
-	cumulatedFollowers.reset(0);
-
-	coveredTiles = 1;
-	holes = rnb.getNumberOfHoles();
-
-	ambigiousPosition = idxTile;
-
-}
-
-// don't use the roadnode after unlinking the children
-void RoadNode::unlinkChildren()
-{
-	for (int i = 0; i < sons.length(); i++)
-		sons[i]->father = nullptr;
-}
-
-// son has no father
-void RoadNode::becomeFatherOf(RoadNode * son)
-{
-	sons.push(son);
-	son->father = this;
-
-	// holes §§ une fusion a eu lieu, donc deux trous ont été bouchés.
-	holes += son->holes - 2;
-
-	// followers
-	if (son->hasAnyFollower()) {
-		if (garbageDirectFollower == -2)
-			garbageDirectFollower = -1;
-		cumulatedFollowers = son->cumulatedFollowers;
+		ambigiousPosition = -1;
 	}
 
-	// coveredTiles
-	if (ambigiousPosition == -1) {
-		coveredTiles += son->coveredTiles;
-		ambigiousPosition = son->ambigiousPosition;
+	void RoadNode::reset(const RoadNodeBlueprint & rnb, int idxTile)
+	{
+		father = nullptr;
+
+		sons.cleanse();
+
+		garbageDirectFollower = -2;
+		cumulatedFollowers.reset(0);
+
+		coveredTiles = 1;
+		holes = rnb.getNumberOfHoles();
+
+		ambigiousPosition = idxTile;
+
 	}
-	else {
-		if (son->ambigiousPosition != ambigiousPosition) {
+
+	// don't use the roadnode after unlinking the children
+	void RoadNode::unlinkChildren()
+	{
+		for (int i = 0; i < sons.length(); i++)
+			sons[i]->father = nullptr;
+	}
+
+	// son has no father
+	void RoadNode::becomeFatherOf(RoadNode * son)
+	{
+		sons.push(son);
+		son->father = this;
+
+		// holes §§ une fusion a eu lieu, donc deux trous ont été bouchés.
+		holes += son->holes - 2;
+
+		// followers
+		if (son->hasAnyFollower()) {
+			if (garbageDirectFollower == -2)
+				garbageDirectFollower = -1;
+			cumulatedFollowers = son->cumulatedFollowers;
+		}
+
+		// coveredTiles
+		if (ambigiousPosition == -1) {
 			coveredTiles += son->coveredTiles;
+			ambigiousPosition = son->ambigiousPosition;
 		}
 		else {
-			coveredTiles += son->coveredTiles - 1;
+			if (son->ambigiousPosition != ambigiousPosition) {
+				coveredTiles += son->coveredTiles;
+			}
+			else {
+				coveredTiles += son->coveredTiles - 1;
+			}
 		}
 	}
+
 }
-
-

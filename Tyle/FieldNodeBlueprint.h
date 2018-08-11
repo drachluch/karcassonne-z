@@ -1,10 +1,13 @@
 #pragma once
 
-struct FieldNodeBlueprint {
-	int numberAdjacentCityNodes;
-	int adjacentCityNodes[2];
+namespace kar {
 
-	int getNumberAdjacentCityNodes() const { return numberAdjacentCityNodes; }
-	const int * getAdjacentCityNodes() const { return adjacentCityNodes; }
-};
+	struct FieldNodeBlueprint {
+		int numberAdjacentCityNodes;
+		int adjacentCityNodes[2];
 
+		int getNumberAdjacentCityNodes() const { return numberAdjacentCityNodes; }
+		const int * getAdjacentCityNodes() const { return adjacentCityNodes; }
+	};
+
+}

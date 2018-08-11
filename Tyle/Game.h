@@ -14,7 +14,7 @@
 
 #include "NeighborStack.h"
 
-namespace Karcassonne {
+namespace kar {
 
 
 	class Game

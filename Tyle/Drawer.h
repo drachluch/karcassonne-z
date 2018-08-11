@@ -3,7 +3,7 @@
 #include "Game.h"
 #include <ostream>
 
-namespace Karcassonne {
+namespace kar {
 
 
 	struct Bounds {

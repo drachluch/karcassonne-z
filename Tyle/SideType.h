@@ -1,11 +1,14 @@
 #pragma once
 #include <ostream>
 
-enum class SideType {
-	City,
-	Road,
-	Field
-};
+namespace kar {
 
-std::ostream & operator<<(std::ostream & out, SideType st);
+	enum class SideType {
+		City,
+		Road,
+		Field
+	};
 
+	std::ostream & operator<<(std::ostream & out, SideType st);
+
+}

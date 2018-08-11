@@ -1,7 +1,7 @@
 #include "Drawer.h"
 
 
-namespace Karcassonne {
+namespace kar {
 
 	std::ostream & operator<<(std::ostream & out, const Bounds & b) { return out << "{\"xmin\":" << b.xmin << ",\"xmax\":" << b.xmax << ",\"ymin\":" << b.ymin << ",\"ymax\":" << b.ymax << "}"; }
 	void writeTileInfo(std::ostream & out, const Position & p, const Tile & t) { out << "{\"name\":\"" << t.name << "\",\"direction\":" << t.direction.get() << ",\"position\":" << p << "}"; }
@@ -33,7 +33,7 @@ namespace Karcassonne {
 
 	void writeHTMLHeader(std::ostream & out)
 	{
-		out << "<!DOCTYPE html><html lang=\"fr\"><head><meta charset=\"utf-8\" /><title>Karcassonne</title><link rel=\"icon\" type=\"image/png\" href=\"tiles/icone.png\" /><link rel=\"stylesheet\" href=\"tiles/design.css\"><script src=\"tiles/script.js\"></script></head>";
+		out << "<!DOCTYPE html><html lang=\"fr\"><head><meta charset=\"utf-8\" /><title>kar</title><link rel=\"icon\" type=\"image/png\" href=\"tiles/icone.png\" /><link rel=\"stylesheet\" href=\"tiles/design.css\"><script src=\"tiles/script.js\"></script></head>";
 	}
 
 	void writeFollowerInfo(std::ostream & out, const Position & p, const FollowerLog & fl, int indexPlayer) {

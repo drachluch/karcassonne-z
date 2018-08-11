@@ -1,14 +1,17 @@
 #pragma once
 #include "Direction.h"
 
-enum class FieldPosition {
-	Center, Right, Left
-};
+namespace kar {
 
-struct CompleteFieldPosition {
+	enum class FieldPosition {
+		Center, Right, Left
+	};
 
-	Direction direction;
-	FieldPosition fieldPosition;
+	struct CompleteFieldPosition {
 
-};
+		Direction direction;
+		FieldPosition fieldPosition;
 
+	};
+
+}

@@ -5,7 +5,7 @@
 
 void cloisterOnePlayer()
 {
-	Karcassonne::Game g;
+	kar::Game g;
 
 	for (int xx = 0; xx < 72 && g.hasRemainingBlueprint(); xx++) {
 		int idxBlueprint = g.nextBlueprintIndex();
@@ -13,14 +13,14 @@ void cloisterOnePlayer()
 
 		bool isScoreInitialised = false;
 		int idxPosition = -1;
-		Direction dir;
+		kar::Direction dir;
 		float score = 0.;
 
 
 		for (int i = 0, l = g.getNumberReachablePositions(); i < l; i++) {
 			for (int d = 0; d < blueprint.getNumberOfPertinentDirection(); d++) {
-				if (g.canSetTile(i, idxBlueprint, Direction{ d })) {
-					g.setTile(i, idxBlueprint, Direction{ d });
+				if (g.canSetTile(i, idxBlueprint, kar::Direction{ d })) {
+					g.setTile(i, idxBlueprint, kar::Direction{ d });
 
 					if (g.hasIdleFollower() && g.canSetMonk())
 						g.setMonk();
@@ -32,7 +32,7 @@ void cloisterOnePlayer()
 
 					if (!isScoreInitialised || score < t_score) {
 						idxPosition = i;
-						dir = Direction{ d };
+						dir = kar::Direction{ d };
 						score = t_score;
 						isScoreInitialised = true;
 					}
@@ -54,11 +54,11 @@ void cloisterOnePlayer()
 	std::cerr << g.getScore(0) << std::endl;
 
 
-	Karcassonne::writeHTMLHeader(std::cout);
+	kar::writeHTMLHeader(std::cout);
 	std::cout << "<body><script language=\"javascript\">var state=";
-	Karcassonne::writeCurrentState(std::cout, g);
+	kar::writeCurrentState(std::cout, g);
 	std::cout << ";var followers =";
-	Karcassonne::writeFollowers(std::cout, g);
+	kar::writeFollowers(std::cout, g);
 	std::cout << ";K.showLogState20180729(\"first\",state,followers);</script></body></html>";
 
 }
@@ -68,7 +68,7 @@ void cloisterOnePlayer()
 
 // en situation standard (hors tentative de prédiction), le blueprint à placer est aléatoire.
 // donc on calcule le score max pour chaque blueprint, puis on agrège en prenant la moyenne des scores.
-float exploreTheFuture_cloisterOnePlayer(Karcassonne::Game & g, int depth)
+float exploreTheFuture_cloisterOnePlayer(kar::Game & g, int depth)
 {
 	if (depth < 0)
 		throw "Depth can't be strictly negative.";
@@ -96,8 +96,8 @@ float exploreTheFuture_cloisterOnePlayer(Karcassonne::Game & g, int depth)
 			for (int indexReachablePosition = 0, numberReachablePositions = g.getNumberReachablePositions(); indexReachablePosition < numberReachablePositions; indexReachablePosition++) {
 				// parcours de l'ensemble des directions possibles pour le blueprint
 				for (int d = 0; d < nbOfPertinentDirection; d++) {
-					if (g.canSetTile(indexReachablePosition, indexBlueprint, Direction{ d })) {
-						g.setTile(indexReachablePosition, indexBlueprint, Direction{ d });
+					if (g.canSetTile(indexReachablePosition, indexBlueprint, kar::Direction{ d })) {
+						g.setTile(indexReachablePosition, indexBlueprint, kar::Direction{ d });
 						isThereAnyWayOut = true;
 
 						if (g.canSetMonk() && g.hasIdleFollower()) {
@@ -132,7 +132,7 @@ float exploreTheFuture_cloisterOnePlayer(Karcassonne::Game & g, int depth)
 }
 
 
-int evaluateCloistersState(const Karcassonne::Game & g) {
+int evaluateCloistersState(const kar::Game & g) {
 	int score = 0;
 	for (int i = 0, l = g.getNumberCloisters(); i < l; i++) {
 		const auto & c = g.getCloister(i);
@@ -144,7 +144,7 @@ int evaluateCloistersState(const Karcassonne::Game & g) {
 
 void roadnodeOnePlayer()
 {
-	Karcassonne::Game g;
+	kar::Game g;
 
 	for (int xx = 0; xx < 72 && g.hasRemainingBlueprint(); xx++) {
 		int idxBlueprint = g.nextBlueprintIndex();
@@ -152,7 +152,7 @@ void roadnodeOnePlayer()
 
 		bool isScoreInitialised = false;
 		int idxPosition = -1;
-		Direction dir;
+		kar::Direction dir;
 		float score = 0.;
 		int way = -1;
 
@@ -160,15 +160,15 @@ void roadnodeOnePlayer()
 
 		for (int i = 0, l = g.getNumberReachablePositions(); i < l; i++) {
 			for (int d = 0; d < blueprint.getNumberOfPertinentDirection(); d++) {
-				if (g.canSetTile(i, idxBlueprint, Direction{ d })) {
-					g.setTile(i, idxBlueprint, Direction{ d });
+				if (g.canSetTile(i, idxBlueprint, kar::Direction{ d })) {
+					g.setTile(i, idxBlueprint, kar::Direction{ d });
 
 					//float t_score = exploreTheFuture_roadnodeOnePlayer(g, depth);
 					float t_score = evaluateRoadnodesState(g);
 
 					if (!isScoreInitialised || score < t_score) {
 						idxPosition = i;
-						dir = Direction{ d };
+						dir = kar::Direction{ d };
 						score = t_score;
 						way = -1;
 						isScoreInitialised = true;
@@ -185,7 +185,7 @@ void roadnodeOnePlayer()
 
 							if (score < t_score) {
 								idxPosition = i;
-								dir = Direction{ d };
+								dir = kar::Direction{ d };
 								score = t_score;
 								way = idxWay;
 							}
@@ -224,16 +224,16 @@ void roadnodeOnePlayer()
 
 
 	//*
-	Karcassonne::writeHTMLHeader(std::cout);
+	kar::writeHTMLHeader(std::cout);
 	std::cout << "<body><script language=\"javascript\">var state=";
-	Karcassonne::writeCurrentState(std::cout, g);
+	kar::writeCurrentState(std::cout, g);
 	std::cout << ";var followers =";
-	Karcassonne::writeFollowers(std::cout, g);
+	kar::writeFollowers(std::cout, g);
 	std::cout << ";K.showLogState20180729(\"first\",state,followers);</script></body></html>";
 	//*/
 }
 
-float exploreTheFuture_roadnodeOnePlayer(Karcassonne::Game & g, int depth)
+float exploreTheFuture_roadnodeOnePlayer(kar::Game & g, int depth)
 {
 	if (depth < 0)
 		throw "Depth can't be strictly negative.";
@@ -261,8 +261,8 @@ float exploreTheFuture_roadnodeOnePlayer(Karcassonne::Game & g, int depth)
 			for (int indexReachablePosition = 0, numberReachablePositions = g.getNumberReachablePositions(); indexReachablePosition < numberReachablePositions; indexReachablePosition++) {
 				// parcours de l'ensemble des directions possibles pour le blueprint
 				for (int d = 0; d < nbOfPertinentDirection; d++) {
-					if (g.canSetTile(indexReachablePosition, indexBlueprint, Direction{ d })) {
-						g.setTile(indexReachablePosition, indexBlueprint, Direction{ d });
+					if (g.canSetTile(indexReachablePosition, indexBlueprint, kar::Direction{ d })) {
+						g.setTile(indexReachablePosition, indexBlueprint, kar::Direction{ d });
 						isThereAnyWayOut = true;
 
 
@@ -314,12 +314,12 @@ float exploreTheFuture_roadnodeOnePlayer(Karcassonne::Game & g, int depth)
 		: evaluateRoadnodesState(g);
 }
 
-float evaluateRoadnodesState(const Karcassonne::Game & g)
+float evaluateRoadnodesState(const kar::Game & g)
 {
 	float score = (float) g.getScore(0);
 
 	for (int idxRoadnode = 0, l = g.getNumberRoadNodes(); idxRoadnode < l; idxRoadnode++) {
-		const RoadNode & rn = g.getRoadNode(idxRoadnode);
+		const auto & rn = g.getRoadNode(idxRoadnode);
 		if (!rn.hasFather() && rn.hasAnyFollower() && !rn.isCompleted())
 			score += rn.score() * .9375f;
 	}
@@ -329,7 +329,7 @@ float evaluateRoadnodesState(const Karcassonne::Game & g)
 
 void bothOnePlayer()
 {
-	Karcassonne::Game g;
+	kar::Game g;
 
 	for (int xx = 0; xx < 72 && g.hasRemainingBlueprint(); xx++) {
 		int idxBlueprint = g.nextBlueprintIndex();
@@ -337,25 +337,25 @@ void bothOnePlayer()
 
 		bool isScoreInitialised = false;
 		int idxPosition = -1;
-		Direction dir;
+		kar::Direction dir;
 		float score = 0.;
-		OptionFollowerType folType = OptionFollowerType::None;
+		kar::OptionFollowerType folType = kar::OptionFollowerType::None;
 		int way = -1;
 
 		const int depth = 0;
 
 		for (int i = 0, l = g.getNumberReachablePositions(); i < l; i++) {
 			for (int d = 0; d < blueprint.getNumberOfPertinentDirection(); d++) {
-				if (g.canSetTile(i, idxBlueprint, Direction{ d })) {
-					g.setTile(i, idxBlueprint, Direction{ d });
+				if (g.canSetTile(i, idxBlueprint, kar::Direction{ d })) {
+					g.setTile(i, idxBlueprint, kar::Direction{ d });
 
 					float t_score = evaluateBothState(g);
 
 					if (!isScoreInitialised || score < t_score) {
 						idxPosition = i;
-						dir = Direction{ d };
+						dir = kar::Direction{ d };
 						score = t_score;
-						folType = OptionFollowerType::None;
+						folType = kar::OptionFollowerType::None;
 						way = -1;
 						isScoreInitialised = true;
 					}
@@ -368,9 +368,9 @@ void bothOnePlayer()
 
 							if (score < t_score) {
 								idxPosition = i;
-								dir = Direction{ d };
+								dir = kar::Direction{ d };
 								score = t_score;
-								folType = OptionFollowerType::Monk;
+								folType = kar::OptionFollowerType::Monk;
 								way = -1;
 							}
 
@@ -386,9 +386,9 @@ void bothOnePlayer()
 
 							if (score < t_score) {
 								idxPosition = i;
-								dir = Direction{ d };
+								dir = kar::Direction{ d };
 								score = t_score;
-								folType = OptionFollowerType::Thief;
+								folType = kar::OptionFollowerType::Thief;
 								way = idxWay;
 							}
 
@@ -410,10 +410,10 @@ void bothOnePlayer()
 			g.setTile(idxPosition, idxBlueprint, dir);
 
 			switch (folType) {
-			case OptionFollowerType::Monk:
+			case kar::OptionFollowerType::Monk:
 				g.setMonk();
 				break;
-			case OptionFollowerType::Thief:
+			case kar::OptionFollowerType::Thief:
 				g.setThief(way);
 				break;
 			default:
@@ -430,22 +430,22 @@ void bothOnePlayer()
 
 
 	//*
-	Karcassonne::writeHTMLHeader(std::cout);
+	kar::writeHTMLHeader(std::cout);
 	std::cout << "<body><script language=\"javascript\">var state=";
-	Karcassonne::writeCurrentState(std::cout, g);
+	kar::writeCurrentState(std::cout, g);
 	std::cout << ";var followers =";
-	Karcassonne::writeFollowers(std::cout, g);
+	kar::writeFollowers(std::cout, g);
 	std::cout << ";K.showLogState20180729(\"first\",state,followers);</script></body></html>";
 	//*/
 
 }
 
-float evaluateBothState(const Karcassonne::Game & g)
+float evaluateBothState(const kar::Game & g)
 {
 	float score = (float)g.getScore(0);
 
 	for (int idxRoadnode = 0, l = g.getNumberRoadNodes(); idxRoadnode < l; idxRoadnode++) {
-		const RoadNode & rn = g.getRoadNode(idxRoadnode);
+		const auto & rn = g.getRoadNode(idxRoadnode);
 		if (!rn.hasFather() && rn.hasAnyFollower() && !rn.isCompleted())
 			score += rn.score() * .9375f;
 	}

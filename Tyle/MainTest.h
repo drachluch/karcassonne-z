@@ -2,17 +2,17 @@
 #include "Game.h"
 
 void cloisterOnePlayer();
-float exploreTheFuture_cloisterOnePlayer(Karcassonne::Game & g, int depth);
-int evaluateCloistersState(const Karcassonne::Game & g);
+float exploreTheFuture_cloisterOnePlayer(kar::Game & g, int depth);
+int evaluateCloistersState(const kar::Game & g);
 
 
 void roadnodeOnePlayer();
-float exploreTheFuture_roadnodeOnePlayer(Karcassonne::Game & g, int depth);
-float evaluateRoadnodesState(const Karcassonne::Game & g);
+float exploreTheFuture_roadnodeOnePlayer(kar::Game & g, int depth);
+float evaluateRoadnodesState(const kar::Game & g);
 
 
 void bothOnePlayer();
-float evaluateBothState(const Karcassonne::Game & g);
+float evaluateBothState(const kar::Game & g);
 
 
 

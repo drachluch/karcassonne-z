@@ -3,13 +3,13 @@
 #include <iostream>
 
 
-float evaluateCitiesRoadsAndCloistersState(const Karcassonne::Game & g);
+float evaluateCitiesRoadsAndCloistersState(const kar::Game & g);
 
 //
 
 void citiesRoadsAndCloisters_OnePlayer()
 {
-	Karcassonne::Game g;
+	kar::Game g;
 
 	for (int xx = 0; xx < 72 && g.hasRemainingBlueprint(); xx++) {
 		int idxBlueprint = g.nextBlueprintIndex();
@@ -17,25 +17,25 @@ void citiesRoadsAndCloisters_OnePlayer()
 
 		bool isScoreInitialised = false;
 		int idxPosition = -1;
-		Direction dir;
+		kar::Direction dir;
 		auto score = 0.f;
-		OptionFollowerType folType = OptionFollowerType::None;
+		kar::OptionFollowerType folType = kar::OptionFollowerType::None;
 		int way = -1;
 
 		const int depth = 0;
 
 		for (int i = 0, l = g.getNumberReachablePositions(); i < l; i++) {
 			for (int d = 0; d < blueprint.getNumberOfPertinentDirection(); d++) {
-				if (g.canSetTile(i, idxBlueprint, Direction{ d })) {
-					g.setTile(i, idxBlueprint, Direction{ d });
+				if (g.canSetTile(i, idxBlueprint, kar::Direction{ d })) {
+					g.setTile(i, idxBlueprint, kar::Direction{ d });
 
 					auto t_score = evaluateCitiesRoadsAndCloistersState(g);
 
 					if (!isScoreInitialised || score < t_score) {
 						idxPosition = i;
-						dir = Direction{ d };
+						dir = kar::Direction{ d };
 						score = t_score;
-						folType = OptionFollowerType::None;
+						folType = kar::OptionFollowerType::None;
 						way = -1;
 						isScoreInitialised = true;
 					}
@@ -48,9 +48,9 @@ void citiesRoadsAndCloisters_OnePlayer()
 
 							if (score < t_score) {
 								idxPosition = i;
-								dir = Direction{ d };
+								dir = kar::Direction{ d };
 								score = t_score;
-								folType = OptionFollowerType::Monk;
+								folType = kar::OptionFollowerType::Monk;
 								way = -1;
 							}
 
@@ -66,9 +66,9 @@ void citiesRoadsAndCloisters_OnePlayer()
 
 							if (score < t_score) {
 								idxPosition = i;
-								dir = Direction{ d };
+								dir = kar::Direction{ d };
 								score = t_score;
-								folType = OptionFollowerType::Thief;
+								folType = kar::OptionFollowerType::Thief;
 								way = idxWay;
 							}
 
@@ -84,9 +84,9 @@ void citiesRoadsAndCloisters_OnePlayer()
 
 							if (score < t_score) {
 								idxPosition = i;
-								dir = Direction{ d };
+								dir = kar::Direction{ d };
 								score = t_score;
-								folType = OptionFollowerType::Knight;
+								folType = kar::OptionFollowerType::Knight;
 								way = idxWay;
 							}
 
@@ -108,13 +108,13 @@ void citiesRoadsAndCloisters_OnePlayer()
 			g.setTile(idxPosition, idxBlueprint, dir);
 
 			switch (folType) {
-			case OptionFollowerType::Monk:
+			case kar::OptionFollowerType::Monk:
 				g.setMonk();
 				break;
-			case OptionFollowerType::Thief:
+			case kar::OptionFollowerType::Thief:
 				g.setThief(way);
 				break;
-			case OptionFollowerType::Knight:
+			case kar::OptionFollowerType::Knight:
 				g.setKnight(way);
 				break;
 			default:
@@ -131,17 +131,17 @@ void citiesRoadsAndCloisters_OnePlayer()
 
 
 	//*
-	Karcassonne::writeHTMLHeader(std::cout);
+	kar::writeHTMLHeader(std::cout);
 	std::cout << "<body><script language=\"javascript\">var state=";
-	Karcassonne::writeCurrentState(std::cout, g);
+	kar::writeCurrentState(std::cout, g);
 	std::cout << ";var followers =";
-	Karcassonne::writeFollowers(std::cout, g);
+	kar::writeFollowers(std::cout, g);
 	std::cout << ";K.showLogState20180729(\"first\",state,followers);</script></body></html>";
 	//*/
 
 }
 
-float evaluateCitiesRoadsAndCloistersState(const Karcassonne::Game & g)
+float evaluateCitiesRoadsAndCloistersState(const kar::Game & g)
 {
 	auto score = (float)g.getScore(0);
 

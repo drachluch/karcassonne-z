@@ -2,34 +2,37 @@
 #include <string>
 
 
-void FieldNode::reset()
-{
-	father = nullptr;
-	sons.cleanse();
+namespace kar {
 
-	garbageDirectFollower = -2;
-	cumulatedFollowers.reset(0);
+	void FieldNode::reset()
+	{
+		father = nullptr;
+		sons.cleanse();
 
-	neighborCities = { 0, nullptr };
-}
+		garbageDirectFollower = -2;
+		cumulatedFollowers.reset(0);
 
-void FieldNode::becomeFatherOf(FieldNode * son)
-{
-	sons.push(son);
-	son->father = this;
+		neighborCities = { 0, nullptr };
+	}
 
-	// followers
-	if (son->hasAnyFollower()) {
-		if (garbageDirectFollower == -2)
-			garbageDirectFollower = -1;
-		cumulatedFollowers = son->cumulatedFollowers;
+	void FieldNode::becomeFatherOf(FieldNode * son)
+	{
+		sons.push(son);
+		son->father = this;
+
+		// followers
+		if (son->hasAnyFollower()) {
+			if (garbageDirectFollower == -2)
+				garbageDirectFollower = -1;
+			cumulatedFollowers = son->cumulatedFollowers;
+		}
+
+	}
+
+	void FieldNode::unlinkChildren()
+	{
+		for (int i = 0; i < sons.length(); i++)
+			sons[i]->father = nullptr;
 	}
 
 }
-
-void FieldNode::unlinkChildren()
-{
-	for (int i = 0; i < sons.length(); i++)
-		sons[i]->father = nullptr;
-}
-

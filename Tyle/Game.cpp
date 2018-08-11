@@ -1,7 +1,7 @@
 #include "Game.h"
 #include <string>
 
-namespace Karcassonne {
+namespace kar {
 
 const TileBlueprint Game::blueprints[NUMBER_OF_DISTINCT_TILES] = {
 	TileBlueprint{
