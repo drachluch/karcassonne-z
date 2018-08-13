@@ -1,114 +1,125 @@
 #pragma once
 #include "Array.h"
-#include "Bloc.h"
 #include "TileBlueprint.h"
 #include "Road.h"
+#include "RoadIterator.h"
+#include "first.h"
 
 namespace kar {
 
-
-	template <int nbPlayers>
-	void noticeCompletedNode(const Road<nbPlayers> & nd, BlocStatic<int, nbPlayers> & scores, BlocStatic<int, nbPlayers> & followers);
-
-	template <int nbPlayers>
-	void unnoticeCompletedNode(const Road<nbPlayers> & nd, BlocStatic<int, nbPlayers> & scores, BlocStatic<int, nbPlayers> & followers);
-
-	template <int nbPlayers>
-	void noticeDirectFollower(Road<nbPlayers> & nd, char idxPlayer, BlocStatic<int, nbPlayers> & scores, BlocStatic<int, nbPlayers> & followers);
-
-	template <int nbPlayers>
-	void unnoticeDirectFollower(Road<nbPlayers> & nd, BlocStatic<int, nbPlayers> & scores, BlocStatic<int, nbPlayers> & followers);
-	
-
-	template <int nbNodes, int nbPlayers, int nbTiles>
 	class RoadContainer {
 	public:
-		using Node = Road<nbPlayers>;
-		using Nodes = Array<Node, nbNodes>;
-		using Scores = BlocStatic<int, nbPlayers>;
-		using Followers = BlocStatic<int, nbPlayers>;
-		using Logs = Array<char, nbTiles>;
+		using Node = Road;
+		using Index = Road::Index;
+		using Nodes = Array<Node, NUMBER_OF_ROADNODES>;
+		using Scores = BlocStatic<int, NUMBER_OF_PLAYERS>;
+		using Followers = BlocStatic<char, NUMBER_OF_PLAYERS>;
+		using Logs = Array<char, NUMBER_OF_TILES>;
 
 	private:
 		Nodes nodes;
 		Logs addedNumberOfRoadsLogs;
-		Scores scores = { 0 };
-		Followers followers = { 0 };
+		Scores scores;
+		Followers followers;
 
 		template <typename T>
 		void unlinkChildren(const T idx);
 		
 	public:
+		RoadContainer() : scores(0), followers(0) {}
+		~RoadContainer() = default;
 
 		void add(const TileBlueprint::RoadNodeBlueprints & rnbs);
-		void makeFatherAndSon(const signed char idxFather, const signed char idxChild);
+		void makeFatherAndSon(const Index idxFather, const Index idxChild);
 		void checkForCompletedNodes();
 		void cancel();
 
+		void noticeEnd();
+		void unnoticeEnd();
+
 		int waysToSetFollower() const;
-		void setFollower(int wayThief, char idxPlayer);
+		Index setFollower(int wayThief, char idxPlayer);
 		void cancelFollower(int wayThief);
+
+		Index getIndexOfRoot(const Index idx) const { return nodes[idx].hasFather() ? getIndexOfRoot(nodes[idx].getFather()) : idx; }
+		int getLastNumberOfAddedRoads() const { return addedNumberOfRoadsLogs.last(); }
+		int getNumberOfNodes() const { return nodes.length(); }
+
+		RoadIterator getIterator() const { return RoadIterator{nodes}; }
+
+		inline const Scores & getThiefScores() const { return scores; }
+		inline const Followers & getBusyFollowers() const { return followers; }
 
 	};
 
-	template<int nbNodes, int nbPlayers, int nbTiles>
-	inline void RoadContainer<nbNodes, nbPlayers, nbTiles>::add(const TileBlueprint::RoadNodeBlueprints & rnbs)
+	
+
+	inline void RoadContainer::add(const TileBlueprint::RoadNodeBlueprints & rnbs)
 	{
 		nodes.addLength(rnbs.length());
 		addedNumberOfRoadsLogs.push(rnbs.length());
 
 		if (rnbs.length() == 1)
-			nodes.last().reset(rnbs[0]);
+			nodes.last().reset(rnbs[0].getNumberOfHoles());
 		else
 			if (rnbs.length() > 1) {
-				auto first = nodes.length();
+				const auto first = nodes.length() - rnbs.length();
 				for (auto i = 0; i < rnbs.length(); i++)
-					nodes[first + i].reset(rnbs[i], addedNumberOfRoadsLogs.length());
+					nodes[first + i].reset(rnbs[i].getNumberOfHoles(), addedNumberOfRoadsLogs.length());
 			}
 	}
 
-	template<int nbNodes, int nbPlayers, int nbTiles>
-	inline void RoadContainer<nbNodes, nbPlayers, nbTiles>::makeFatherAndSon(const signed char idxFather, const signed char idxChild)
+	inline void RoadContainer::makeFatherAndSon(const Index idxFather, const Index idxChild)
 	{
 		nodes[idxFather].becomeFatherOf(nodes[idxChild], idxFather, idxChild);
 	}
 
-	template<int nbNodes, int nbPlayers, int nbTiles>
-	inline void RoadContainer<nbNodes, nbPlayers, nbTiles>::checkForCompletedNodes()
+	inline void RoadContainer::checkForCompletedNodes()
 	{
 		auto nbNodesChecked = addedNumberOfRoadsLogs.last();
 		auto first = nodes.length() - nbNodesChecked;
 		// décompte des points pour les routes terminées avec des partisans déjà dessus
 		for (auto i = 0; i < nbNodesChecked; i++) {
-			auto & rn = nodes[first + i];
-			if (!rn.hasFather() && rn.isCompleted() && rn.hasAnyFollower())
-				noticeCompletedNode(rn, scores, followers);
+			const auto & rn = nodes[first + i];
+			const auto & core = rn.getCoreData();
+			if (!rn.hasFather() && core.isCompleted() && rn.hasAnyFollower()) {
+				core.give_points(scores);
+				core.free_followers(followers);
+			}
 		}
 	}
 
 	// nbNodes > 0
-	template<int nbNodes, int nbPlayers, int nbTiles>
-	inline void RoadContainer<nbNodes, nbPlayers, nbTiles>::cancel()
+	inline void RoadContainer::cancel()
 	{
 		auto nbNodesCanceled = addedNumberOfRoadsLogs.pop();
 		auto first = nodes.length() - nbNodesCanceled;
 		for (auto i = 0; i < nbNodesCanceled; i++) {
-			auto & nd = nodes[first + i];
-			if (nd.hasAnyFollower() && !nd.hasFather()) {
-				if (nd.hasDirectFollower()) {
-					unnoticeDirectFollower(nd, scores, followers);
-				} else {
-					if (nd.isCompleted())
-						unnoticeCompletedNode(nd, scores, followers);
-				}
-			}
+			nodes[first + i].cancel(scores, followers);
 			unlinkChildren(first + i);
 		}
 		nodes.addLength(-nbNodesCanceled);
 	}
 
-	template<int nbNodes, int nbPlayers, int nbTiles>
-	inline int RoadContainer<nbNodes, nbPlayers, nbTiles>::waysToSetFollower() const
+	inline void RoadContainer::noticeEnd()
+	{
+		for (auto i = 0; i < nodes.length(); i++) {
+			const auto & nd = nodes[i];
+			if (!nd.hasFather() && nd.hasAnyFollower() && !nd.isCompleted())
+				nd.noticeUncompletedNodeAtTheEnd(scores);
+		}
+	}
+
+	inline void RoadContainer::unnoticeEnd()
+	{
+		for (auto i = 0; i < nodes.length(); i++) {
+			const auto & nd = nodes[i];
+			if (!nd.hasFather() && nd.hasAnyFollower() && !nd.isCompleted())
+				nd.unnoticeUncompletedNodeAtTheEnd(scores);
+		}
+	}
+
+	inline int RoadContainer::waysToSetFollower() const
 	{
 		auto ways = 0;
 		auto nbNodesChecked = addedNumberOfRoadsLogs.last();
@@ -121,8 +132,25 @@ namespace kar {
 		return ways;
 	}
 
-	template<int nbNodes, int nbPlayers, int nbTiles>
-	inline void RoadContainer<nbNodes, nbPlayers, nbTiles>::setFollower(int wayThief, char idxPlayer)
+	inline RoadContainer::Index RoadContainer::setFollower(int wayThief, char idxPlayer)
+	{
+		const auto nbNodesChecked = addedNumberOfRoadsLogs.last();
+		const auto first = nodes.length() - nbNodesChecked;
+		auto ways = 0;
+
+		for (auto i = 0; i < nbNodesChecked; i++) {
+			auto & rn = nodes[first + i];
+			if (rn.canSetFollower()) {
+				if (ways == wayThief) {
+					rn.noticeDirectFollower(idxPlayer, scores, followers);
+					return first + i;
+				}
+				ways++;
+			}
+		}
+	}
+
+	inline void RoadContainer::cancelFollower(int wayThief)
 	{
 		auto nbNodesChecked = addedNumberOfRoadsLogs.last();
 		auto first = nodes.length() - nbNodesChecked;
@@ -130,9 +158,9 @@ namespace kar {
 
 		for (auto i = 0; i < nbNodesChecked; i++) {
 			auto & rn = nodes[first + i];
-			if (rn.canSetThief()) {
+			if (rn.canSetFollower()) {
 				if (ways == wayThief) {
-					noticeDirectFollower(rn, idxPlayer, scores, followers);
+					rn.unnoticeDirectFollower(scores, followers);
 					return;
 				}
 				ways++;
@@ -140,103 +168,11 @@ namespace kar {
 		}
 	}
 
-	template<int nbNodes, int nbPlayers, int nbTiles>
-	inline void RoadContainer<nbNodes, nbPlayers, nbTiles>::cancelFollower(int wayThief)
-	{
-		auto nbNodesChecked = addedNumberOfRoadsLogs.last();
-		auto first = nodes.length() - nbNodesChecked;
-		auto ways = 0;
-
-		for (auto i = 0; i < nbNodesChecked; i++) {
-			auto & rn = nodes[first + i];
-			if (rn.canSetThief()) {
-				if (ways == wayThief) {
-					unnoticeDirectFollower(rn, scores, followers);
-					return;
-				}
-				ways++;
-			}
-		}
-	}
-
-
-	template <int nbPlayers>
-	inline void noticeCompletedNode(const Road<nbPlayers> & nd, BlocStatic<int, nbPlayers> & scores, BlocStatic<int, nbPlayers> & followers) {
-		auto maxF = rn.getMaxFollower();
-		auto score = rn.score();
-
-		for (auto idxPlayer = 0; idxPlayer < nbPlayers; idxPlayer++) {
-			// si le joueur est propriétaire
-			if (rn.getCumulatedFollower(idxPlayer) == maxF)
-				scores[idxPlayer] += score;
-			// libération des partisans
-			followers[idxPlayer] -= rn.getCumulatedFollower(idxPlayer);
-		}
-	}
-
-	template <int nbPlayers>
-	inline void unnoticeCompletedNode(const Road<nbPlayers> & nd, BlocStatic<int, nbPlayers> & scores, BlocStatic<int, nbPlayers> & followers) {
-		auto maxF = nd.getMaxFollower();
-		auto score = nd.score();
-
-		for (auto idxPlayer = 0; idxPlayer < nbPlayers; idxPlayer++) {
-			// si le joueur est propriétaire
-			if (nd.getCumulatedFollower(idxPlayer) == maxF)
-				scores[idxPlayer] -= score;
-			// retour des partisans sur le plateau
-			followers[idxPlayer] += nd.getCumulatedFollower(idxPlayer);
-		}
-	}
-
-	template<int nbPlayers>
-	inline void noticeDirectFollower(Road<nbPlayers> & nd, char idxPlayer, BlocStatic<int, nbPlayers>& scores, BlocStatic<int, nbPlayers>& followers)
-	{
-		if (nd.canSetFollower() && !nd.hasDirectFollower()) {
-
-			nd.setDirectFollower(idxPlayer);
-			if (nd.isCompleted()) {
-				scores[nd.getDirectFollower()] += nd.score(); // les points sont comptés, le partisan est placé puis immédiatement remis à la réserve.
-			} else {
-				followers[nd.getDirectFollower()]++; // les points ne sont pas comptés, le partisan est placé.
-			}
-
-		}
-		else {
-			throw "Can't set follower";
-		}
-
-	}
-
-	template<int nbPlayers>
-	inline void unnoticeDirectFollower(Road<nbPlayers> & nd, BlocStatic<int, nbPlayers>& scores, BlocStatic<int, nbPlayers>& followers)
-	{
-		if (nd.canSetFollower() && nd.hasDirectFollower()) {
-
-			if (nd.isCompleted()) {
-				// les points ont été comptés, le partisan n'est plus sur place
-				// le partisan est déjà libéré, et le score est rendu normal.
-				scores[nd.getDirectFollower()] -= nd.score();
-			}
-			else {
-				// les points n'ont pas été comptés, le partisan est toujours sur place
-				// donc le score ne change pas, et le partisan est libéré.
-				followers[nd.getDirectFollower()]--;
-			}
-
-			nd.setNoDirectFollower();
-		}
-		else {
-			throw "Can't cancel follower";
-		}
-	}
-
-	template<int nbNodes, int nbPlayers, int nbTiles>
 	template<typename T>
-	inline void RoadContainer<nbNodes, nbPlayers, nbTiles>::unlinkChildren(const T idx)
+	inline void RoadContainer::unlinkChildren(const T idx)
 	{
-		auto & sons = nodes[idx].getSons();
-		for (auto iSon = 0; iSon < sons.length(); iSon++)
-			nodes[sons[iSon]].setNoFather();
+		for (auto i : nodes[idx].getSons())
+			nodes[i].setNoFather();
 	}
 
 	

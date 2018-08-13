@@ -1,6 +1,7 @@
 #pragma once
 #include "first.h"
 #include "CityNodeBlueprint.h"
+#include "BlocStatic.h"
 #include "Bloc.h"
 #include "Array.h"
 

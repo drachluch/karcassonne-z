@@ -318,10 +318,10 @@ float evaluateRoadnodesState(const kar::Game & g)
 {
 	float score = (float) g.getScore(0);
 
-	for (int idxRoadnode = 0, l = g.getNumberRoadNodes(); idxRoadnode < l; idxRoadnode++) {
-		const auto & rn = g.getRoadNode(idxRoadnode);
-		if (!rn.hasFather() && rn.hasAnyFollower() && !rn.isCompleted())
-			score += rn.score() * .9375f;
+	for (auto it = g.getRoadIterator(); !it.isOver(); ++it) {
+		const auto & c = it.getCore();
+		if (c.followers.max() > 0)
+			score += c.score() * .9375f;
 	}
 
 	return score;
@@ -444,10 +444,10 @@ float evaluateBothState(const kar::Game & g)
 {
 	float score = (float)g.getScore(0);
 
-	for (int idxRoadnode = 0, l = g.getNumberRoadNodes(); idxRoadnode < l; idxRoadnode++) {
-		const auto & rn = g.getRoadNode(idxRoadnode);
-		if (!rn.hasFather() && rn.hasAnyFollower() && !rn.isCompleted())
-			score += rn.score() * .9375f;
+	for (auto it = g.getRoadIterator(); !it.isOver(); ++it) {
+		const auto & c = it.getCore();
+		if (c.followers.max() > 0)
+			score += c.score() * .9375f;
 	}
 
 	for (int i = 0, l = g.getNumberCloisters(); i < l; i++) {

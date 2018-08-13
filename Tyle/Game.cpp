@@ -1,5 +1,6 @@
 #include "Game.h"
 #include <string>
+#include "BlocStaticSorted.h"
 
 namespace kar {
 
@@ -611,8 +612,11 @@ void Game::tiles_reach(const Position & p, IndexBlueprint indexBlueprint, const 
 	cloisters_reach(p, tb.hasCloister());
 
 	auto idxTile = tiles.length() - 1;
-	if (tb.getNumberOfRoadNodes() > 0)
-		roadnodes_reach(p, idxTile);
+	
+	roads.add(tb.getRoadNodeBlueprints());
+	linkRoads(p);
+	roads.checkForCompletedNodes();
+
 	if (tb.getNumberOfCityNodes() > 0)
 		citynodes_reach(p, idxTile);
 	if (tb.getNumberOfFieldNodes() > 0)
@@ -630,8 +634,9 @@ void Game::tiles_cancel()
 	const auto & tb = getBlueprint(t.getIndexBlueprint());
 
 	cloisters_cancel(positions.pop(), tb.hasCloister());
-	if (tb.getNumberOfRoadNodes() > 0)
-		roadnodes_cancel(tb.getNumberOfRoadNodes());
+	
+	roads.cancel();
+
 	if (tb.getNumberOfCityNodes() > 0)
 		citynodes_cancel(tb.getNumberOfCityNodes());
 	if (tb.getNumberOfFieldNodes() > 0)
@@ -691,17 +696,11 @@ void Game::cloisters_cancel(const Position & p, bool newCloister)
 	}
 }
 
-
-// only if tb.getNumberOfRoadNodes() > 0
-void Game::roadnodes_reach(const Position & p, int idxTile)
+void Game::linkRoads(const Position & p)
 {
-	auto & t = tiles[idxTile];
-	auto & tb = getBlueprint(t.getIndexBlueprint());
-
-	int first = roadnodes.length();
-	int nbNodes = tb.getNumberOfRoadNodes();
-	roadnodes.addLength(nbNodes);
-	bool set[MAX_ROADNODES_PER_TILE] = { false, false, false, false };
+	auto & t = tiles.last();
+	const auto & tb = getBlueprint(t.getIndexBlueprint());
+	const auto first = roads.getNumberOfNodes() - tb.getNumberOfRoadNodes();
 
 	// initialisation des noeuds de route
 	for (int i = 0; i < 4; i++) {
@@ -709,78 +708,24 @@ void Game::roadnodes_reach(const Position & p, int idxTile)
 		const Direction dTr = d.rotateTrigo(t.getDirection());
 
 		if (tb.getSideType(dTr) == SideType::Road) {
-			int relativIdxRoadnode = tb.getRoadNode(dTr);
+			const auto relativIdxRoadnode = tb.getRoadNode(dTr);
+			const auto idxRoadnode = first + relativIdxRoadnode;
 
-			t.setRoadNode(d, first + relativIdxRoadnode);
+			t.setRoadNode(d, idxRoadnode);
 
-			if (!set[relativIdxRoadnode]) {
-				// nbNodes > 1 => position ambigue
-				auto & bp = tb.getRoadNodeBlueprint(relativIdxRoadnode);
-
-				if (nbNodes > 1)
-					roadnodes[first + relativIdxRoadnode].reset(tb.getRoadNodeBlueprint(relativIdxRoadnode), idxTile);
-				else
-					roadnodes[first + relativIdxRoadnode].reset(tb.getRoadNodeBlueprint(relativIdxRoadnode));
-
-				set[relativIdxRoadnode] = true;
-			}
-		}
-	}
-	
-	// interaction avec les noeuds des tuiles adjacentes
-	for (int i = 0; i < 4; i++) {
-		const Direction d{ i };
-
-		if (t.getSideType(d) == SideType::Road) {
-			int idxRoadnode = t.getRoadNode(d);
-			RoadNode & rn = roadnodes[idxRoadnode];
-
-			int indexNextTile = getIndexPosition(p.next(d));
+			const auto indexNextTile = getIndexPosition(p.next(d));
 			if (indexNextTile != -1) {
 
-				RoadNode & rootNextRn = roadnodes[getTile(indexNextTile).getRoadNode(d.opposite())].getRoot();
-				RoadNode & rootCurrentRn = rn.getRoot();
+				auto rootNextRn = roads.getIndexOfRoot(getTile(indexNextTile).getRoadNode(d.opposite()));
+				auto rootCurrentRn = roads.getIndexOfRoot(idxRoadnode);
 
 				// you can't become your own father
 				// and nextRn.getRoot() can't be a child, because it's the result of getRoot()
-				if (&rootCurrentRn != &rootNextRn) {
-					rootCurrentRn.becomeFatherOf(&rootNextRn);
-				}
+				if (rootCurrentRn != rootNextRn)
+					roads.makeFatherAndSon(rootCurrentRn, rootNextRn);
 			}
 		}
 	}
-
-	// décompte des points pour les routes terminées avec des partisans déjà dessus
-	for (int relativIdxRoadnode = 0; relativIdxRoadnode < nbNodes; relativIdxRoadnode++) {
-		RoadNode & rn = roadnodes[first + relativIdxRoadnode];
-		if (!rn.hasFather() && rn.isCompleted() && rn.hasAnyFollower())
-			updateForCompleted(rn, scores, followers);
-	}
-}
-
-// nbNodes > 0
-void Game::roadnodes_cancel(int nbNodes) 
-{
-	int first = roadnodes.length() - nbNodes;
-
-	for (int relativIdxRoadNode = 0; relativIdxRoadNode < nbNodes; relativIdxRoadNode++) {
-		RoadNode & rn = roadnodes[first + relativIdxRoadNode];
-
-		if (rn.hasAnyFollower() && !rn.hasFather()) {
-			if (rn.hasDirectFollower()) {
-				cancelThiefOnRoadnode(first + relativIdxRoadNode);
-			}
-			else {
-				if (rn.isCompleted())
-					cancelUpdateForCompleted(rn, scores, followers);
-			}
-		}
-
-		rn.unlinkChildren();
-	}
-
-	roadnodes.addLength(-nbNodes);
-
 }
 
 void Game::citynodes_reach(const Position & p, int idxTile)
@@ -999,54 +944,6 @@ void Game::fieldnodes_cancel(int nbNodes)
 	}
 
 	fieldnodes.addLength(-nbNodes);
-}
-
-void Game::setThiefOnRoadnode(int indexRoadnode)
-{
-	auto & rn = roadnodes[indexRoadnode];
-
-	if (rn.canSetThief() && !rn.hasDirectFollower() && !followerLogs.last().hasFollower()) {
-		followerLogs.last().setThief(tiles.last().getFirstDirectionOfRoadnode(indexRoadnode));
-
-		rn.setDirectFollower(currentPlayer);
-		if (rn.isCompleted()) {
-			// les points sont comptés, le partisan est placé puis immédiatement remis à la réserve.
-			scores[rn.getDirectFollower()] += rn.score();
-		}
-		else {
-			// les points ne sont pas comptés, le partisan est placé.
-			followers[rn.getDirectFollower()]--;
-		}
-
-	}
-	else {
-		throw "Can't set thief";
-	}
-}
-
-void Game::cancelThiefOnRoadnode(int indexRoadnode)
-{
-	auto & rn = roadnodes[indexRoadnode];
-
-	if (rn.canSetThief() && rn.hasDirectFollower() && followerLogs.last().hasThief()) {
-		followerLogs.last().setNoFollower();
-
-		if (rn.isCompleted()) {
-			// les points ont été comptés, le partisan n'est plus sur place
-			// le partisan est déjà libéré, et le score est rendu normal.
-			scores[rn.getDirectFollower()] -= rn.score();
-		}
-		else {
-			// les points n'ont pas été comptés, le partisan est toujours sur place
-			// donc le score ne change pas, et le partisan est libéré.
-			followers[rn.getDirectFollower()]++;
-		}
-
-		rn.setNoDirectFollower();
-	}
-	else {
-		throw "Can't cancel thief";
-	}
 }
 
 void Game::setKnightOnCitynode(int indexCitynode)
@@ -1277,59 +1174,17 @@ void Game::cancelMonk()
 	}
 }
 
-int Game::waysToSetThief() const 
-{
-	int nbNodes = getBlueprint(tiles.last().getIndexBlueprint()).getNumberOfRoadNodes();
-	int first = roadnodes.length() - nbNodes;
-	int ways = 0;
+int Game::waysToSetThief() const { return roads.waysToSetFollower(); }
 
-	for (int relativIdxRoadnode = 0; relativIdxRoadnode < nbNodes; relativIdxRoadnode++) {
-		const RoadNode & rn = roadnodes[first + relativIdxRoadnode];
-		if (rn.canSetThief())
-			ways++;
-	}
-
-	return ways;
+void Game::setThief(int wayThief) {
+	const auto idxRoad = roads.setFollower(wayThief, currentPlayer);
+	const auto dir = tiles.last().getFirstDirectionOfRoadnode(idxRoad);
+	followerLogs.last().setThief(dir);
 }
 
-void Game::setThief(int wayThief) 
-{
-	int nbNodes = getBlueprint(tiles.last().getIndexBlueprint()).getNumberOfRoadNodes();
-	int first = roadnodes.length() - nbNodes;
-	int ways = 0;
-
-	for (int relativIdxRoadnode = 0; relativIdxRoadnode < nbNodes; relativIdxRoadnode++) {
-		RoadNode & rn = roadnodes[first + relativIdxRoadnode];
-		if (rn.canSetThief()) {
-			if (ways == wayThief) {
-
-				setThiefOnRoadnode(first + relativIdxRoadnode);
-				return;
-			}
-
-			ways++;
-		}
-	}
-}
-
-void Game::cancelThief(int wayThief) 
-{
-	int nbNodes = getBlueprint(tiles.last().getIndexBlueprint()).getNumberOfRoadNodes();
-	int first = roadnodes.length() - nbNodes;
-	int ways = 0;
-
-	for (int relativIdxRoadnode = 0; relativIdxRoadnode < nbNodes; relativIdxRoadnode++) {
-		RoadNode & rn = roadnodes[first + relativIdxRoadnode];
-		if (rn.canSetThief()) {
-			if (ways == wayThief) {
-
-				cancelThiefOnRoadnode(first + relativIdxRoadnode);
-				return;
-			}
-
-			ways++;
-		}
-	}
+void Game::cancelThief(int wayThief) {
+	followerLogs.last().setNoFollower();
+	roads.cancelFollower(wayThief);
 }
 
 int Game::waysToSetKnight() const
@@ -1450,27 +1305,15 @@ void Game::cancel()
 
 void Game::end()
 {
-	auto nbCloisters = getNumberCloisters();
+	const auto nbCloisters = getNumberCloisters();
 	
-	for (int idxCloister = 0; idxCloister < nbCloisters; idxCloister++) {
+	for (auto idxCloister = 0; idxCloister < nbCloisters; idxCloister++) {
 		const auto & c = getCloister(idxCloister);
 		if (!c.isCompleted() && c.hasDirectFollower())
 			scores[c.getDirectFollower()] += c.score();
 	}
 	
-	auto nbRoadnodes = getNumberRoadNodes();
-
-	for (int idxRoadnode = 0; idxRoadnode < nbRoadnodes; idxRoadnode++) {
-		const auto & rn = getRoadNode(idxRoadnode);
-		if (!rn.hasFather() && !rn.isCompleted() && rn.hasAnyFollower()) {
-			int maxF = rn.getMaxFollower();
-			int t_score = rn.score();
-			for (int idxPlayer = 0; idxPlayer < NUMBER_OF_PLAYERS; idxPlayer++)
-				if (rn.getCumulatedFollower(idxPlayer) == rn.getMaxFollower())
-					scores[idxPlayer] += t_score;
-		}
-	}
-
+	roads.noticeEnd();
 }
 
 void setNeighborFields(CityNode & cn, const CityNodeBlueprint & cnb, const Array<FieldNode, NUMBER_OF_FIELDNODES>& fieldnodes, int firstField, NeighborStack<char, MAX_NUMBER_INDEX_NEIGHBOR_FIELDS>& neighborFields)
@@ -1528,6 +1371,7 @@ void setNeighborCities(FieldNode & fn, const FieldNodeBlueprint & fnb, const Arr
 
 	fn.setNeighborCities(bloc);
 }
+
 
 
 }

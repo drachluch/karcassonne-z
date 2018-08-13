@@ -115,10 +115,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Array.cpp" />
     <ClCompile Include="Bloc.cpp" />
+    <ClCompile Include="BlocStatic.cpp" />
+    <ClCompile Include="BlocStaticSorted.cpp" />
     <ClCompile Include="CityNode.cpp" />
     <ClCompile Include="CityNodeBlueprint.cpp" />
     <ClCompile Include="Cloister.cpp" />
+    <ClCompile Include="CloisterContainer.cpp" />
     <ClCompile Include="Direction.cpp" />
     <ClCompile Include="Drawer.cpp" />
     <ClCompile Include="FieldNode.cpp" />
@@ -132,7 +136,8 @@
     <ClCompile Include="Position.cpp" />
     <ClCompile Include="Road.cpp" />
     <ClCompile Include="RoadContainer.cpp" />
-    <ClCompile Include="RoadNode.cpp" />
+    <ClCompile Include="RoadCoreData.cpp" />
+    <ClCompile Include="RoadIterator.cpp" />
     <ClCompile Include="RoadNodeBlueprint.cpp" />
     <ClCompile Include="SideType.cpp" />
     <ClCompile Include="Tile.cpp" />
@@ -141,9 +146,12 @@
   <ItemGroup>
     <ClInclude Include="Array.h" />
     <ClInclude Include="Bloc.h" />
+    <ClInclude Include="BlocStatic.h" />
+    <ClInclude Include="BlocStaticSorted.h" />
     <ClInclude Include="CityNode.h" />
     <ClInclude Include="CityNodeBlueprint.h" />
     <ClInclude Include="Cloister.h" />
+    <ClInclude Include="CloisterContainer.h" />
     <ClInclude Include="Direction.h" />
     <ClInclude Include="Drawer.h" />
     <ClInclude Include="FieldNode.h" />
@@ -158,7 +166,8 @@
     <ClInclude Include="RoadContainer.h" />
     <ClInclude Include="Position.h" />
     <ClInclude Include="Road.h" />
-    <ClInclude Include="RoadNode.h" />
+    <ClInclude Include="RoadCoreData.h" />
+    <ClInclude Include="RoadIterator.h" />
     <ClInclude Include="RoadNodeBlueprint.h" />
     <ClInclude Include="SideType.h" />
     <ClInclude Include="Tile.h" />

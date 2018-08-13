@@ -2,6 +2,7 @@
 #include "first.h"
 #include "FieldNodeBlueprint.h"
 #include "Bloc.h"
+#include "BlocStatic.h"
 #include "Array.h"
 
 namespace kar {

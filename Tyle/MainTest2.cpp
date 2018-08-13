@@ -23,6 +23,7 @@ void citiesRoadsAndCloisters_OnePlayer()
 		int way = -1;
 
 		const int depth = 0;
+		auto before_score = g.getScore(0);
 
 		for (int i = 0, l = g.getNumberReachablePositions(); i < l; i++) {
 			for (int d = 0; d < blueprint.getNumberOfPertinentDirection(); d++) {
@@ -99,6 +100,9 @@ void citiesRoadsAndCloisters_OnePlayer()
 			}
 		}
 
+		if (before_score != g.getScore(0))
+			throw "score has been modified";
+
 		if (!isScoreInitialised)
 			g.discardBlueprint(idxBlueprint);
 		else {
@@ -145,10 +149,10 @@ float evaluateCitiesRoadsAndCloistersState(const kar::Game & g)
 {
 	auto score = (float)g.getScore(0);
 
-	for (int idxRoadnode = 0, l = g.getNumberRoadNodes(); idxRoadnode < l; idxRoadnode++) {
-		const auto & rn = g.getRoadNode(idxRoadnode);
-		if (!rn.hasFather() && rn.hasAnyFollower() && !rn.isCompleted())
-			score += rn.score() * .9375f;
+	for (auto it = g.getRoadIterator(); !it.isOver(); ++it) {
+		const auto & c = it.getCore();
+		if (c.followers.max() > 0)
+			score += c.score() * .9375f;
 	}
 
 	for (int idxCitynode = 0, l = g.getNumberCityNodes(); idxCitynode < l; idxCitynode++) {

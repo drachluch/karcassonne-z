@@ -8,11 +8,13 @@
 #include "Log.h"
 #include "Array.h"
 
-#include "RoadNode.h"
+#include "RoadContainer.h"
 #include "CityNode.h"
 #include "FieldNode.h"
 
 #include "NeighborStack.h"
+
+
 
 namespace kar {
 
@@ -35,17 +37,16 @@ namespace kar {
 		Array<Position, NUMBER_OF_TILES> positions;
 		Array<FollowerLog, NUMBER_OF_TILES> followerLogs;
 
-		Array<RoadNode, NUMBER_OF_ROADNODES> roadnodes;
+		RoadContainer roads;
 		Array<CityNode, NUMBER_OF_CITYNODES> citynodes;
 		Array<FieldNode, NUMBER_OF_FIELDNODES> fieldnodes;
+		Array<Cloister, NUMBER_OF_CLOISTERS> cloisters;
 
 		NeighborStack<char, MAX_NUMBER_INDEX_NEIGHBOR_CITIES> neighborCities;
 		NeighborStack<char, MAX_NUMBER_INDEX_NEIGHBOR_FIELDS> neighborFields;
 
 		Array<Position, 2 * NUMBER_OF_TILES + 2> reachablePositions;
 		Array<ReachablePositionLog, NUMBER_OF_TILES> reachableLogs;
-
-		Array<Cloister, NUMBER_OF_CLOISTERS> cloisters;
 
 		int scores[NUMBER_OF_PLAYERS];
 		int followers[NUMBER_OF_PLAYERS];
@@ -60,8 +61,7 @@ namespace kar {
 		void cloisters_cancel(const Position & p, bool newCloister);
 
 		// nbNodes > 0
-		void roadnodes_reach(const Position & p, int idxTile);
-		void roadnodes_cancel(int nbNodes);
+		void linkRoads(const Position & p);
 
 		// nbNodes > 0
 		void citynodes_reach(const Position & p, int idxTile);
@@ -72,9 +72,6 @@ namespace kar {
 		void fieldnodes_reach(const Position & p, int idxTile);
 		void fieldnodes_setNeighbors(int idxTile);
 		void fieldnodes_cancel(int nbNodes);
-
-		void setThiefOnRoadnode(int indexRoadnode);
-		void cancelThiefOnRoadnode(int indexRoadnode);
 
 		void setKnightOnCitynode(int indexCitynode);
 		void cancelKnightOnCitynode(int indexCitynode);
@@ -108,7 +105,7 @@ namespace kar {
 		const Position & getPosition(int i) const { return positions[i]; }
 		const Tile & getTile(int i) const { return tiles[i]; }
 		const Cloister & getCloister(int i) const { return cloisters[i]; }
-		const RoadNode & getRoadNode(int i) const { return roadnodes[i]; }
+		//const Road & getRoad(int i) const { return roads[i]; }
 		const CityNode & getCityNode(int i) const { return citynodes[i]; }
 		const FieldNode & getFieldNode(int i) const { return fieldnodes[i]; }
 
@@ -118,9 +115,11 @@ namespace kar {
 		// getNumberTiles() == getNumberPositions()
 		int getNumberTiles() const { return tiles.length(); }
 		int getNumberCloisters() const { return cloisters.length(); }
-		int getNumberRoadNodes() const { return roadnodes.length(); }
+		int getNumberRoadNodes() const { return roads.getNumberOfNodes(); }
 		int getNumberCityNodes() const { return citynodes.length(); }
 		int getNumberFieldNodes() const { return fieldnodes.length(); }
+
+		RoadIterator getRoadIterator() const { return roads.getIterator(); }
 
 		const FollowerLog & getFollowerLog(int i) const { return followerLogs[i]; }
 
@@ -156,10 +155,10 @@ namespace kar {
 		void previousPlayer() { currentPlayer = (currentPlayer + NUMBER_OF_PLAYERS - 1) % NUMBER_OF_PLAYERS; }
 		int getNumberOfPlayers() const { return NUMBER_OF_PLAYERS; }
 
-		bool hasIdleFollower(int p) const { return followers[p] > 0; }
+		bool hasIdleFollower(int p) const { return (followers[p] - roads.getBusyFollowers()[p]) > 0; }
 		bool hasIdleFollower() const { return hasIdleFollower(getCurrentPlayer()); }
 
-		int getScore(int i) const { return scores[i]; }
+		int getScore(int i) const { return scores[i] + roads.getThiefScores()[i]; }
 
 		void cancel();
 
@@ -171,5 +170,8 @@ namespace kar {
 
 	void setNeighborFields(CityNode & cn, const CityNodeBlueprint & cnb, const Array<FieldNode, NUMBER_OF_FIELDNODES> & fieldnodes, int firstField, NeighborStack<char, MAX_NUMBER_INDEX_NEIGHBOR_FIELDS> & neighborFields);
 	void setNeighborCities(FieldNode & fn, const FieldNodeBlueprint & fnb, const Array<CityNode, NUMBER_OF_CITYNODES> & citynodes, int firstCity, NeighborStack<char, MAX_NUMBER_INDEX_NEIGHBOR_CITIES> & neighborCities);
+
+
+	
 
 }
