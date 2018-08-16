@@ -5,6 +5,7 @@ namespace kar {
 
 	template <typename T, int L>
 	struct Array {
+		using Element = T;
 	private:
 		T ts[L];
 		int _length = 0;
@@ -69,6 +70,20 @@ namespace kar {
 
 		int getIndex(const T * p) const {
 			return (int)(p - ts);
+		}
+
+		int indexOf(const T & e) const {
+			for (auto i = 0; i < _length; i++)
+				if (ts[i] == e)
+					return i;
+			return -1;
+		}
+
+		bool find(const T & e) const {
+			for (auto i = 0; i < _length; i++)
+				if (ts[i] == e)
+					return true;
+			return false;
 		}
 	};
 

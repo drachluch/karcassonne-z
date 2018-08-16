@@ -133,12 +133,11 @@ float exploreTheFuture_cloisterOnePlayer(kar::Game & g, int depth)
 
 
 int evaluateCloistersState(const kar::Game & g) {
-	int score = 0;
-	for (int i = 0, l = g.getNumberCloisters(); i < l; i++) {
-		const auto & c = g.getCloister(i);
-		if (c.hasDirectFollower())
-			score += c.score();
-	}
+	int score = g.getScore(0);
+
+	for (auto it = g.getCloisterIterator(); it.isNotOver(); ++it)
+		score += it.getCore().score();
+
 	return score;
 }
 
@@ -450,11 +449,8 @@ float evaluateBothState(const kar::Game & g)
 			score += c.score() * .9375f;
 	}
 
-	for (int i = 0, l = g.getNumberCloisters(); i < l; i++) {
-		const auto & c = g.getCloister(i);
-		if (c.hasDirectFollower() && !c.isCompleted())
-			score += c.score();
-	}
+	for (auto it = g.getCloisterIterator(); it.isNotOver(); ++it)
+		score += it.getCore().score();
 
 	return score;
 }

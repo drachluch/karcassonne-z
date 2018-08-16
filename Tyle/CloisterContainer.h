@@ -5,6 +5,7 @@
 #include "BlocStatic.h"
 #include "Position.h"
 #include "Cloister.h"
+#include "CloisterIterator.h"
 
 namespace kar {
 
@@ -33,18 +34,23 @@ namespace kar {
 
 		void cancel(const Position & p);
 
-		bool canSetMonk() const;
-		void setMonk();
+		bool canSetMonk() const { return logs.back(); }
+		void setMonk(const char idxPlayer);
 		void cancelMonk();
+
+		void noticeEnd();
+		void unnoticeEnd();
+
+		CloisterIterator getIterator() const { return CloisterIterator{ cloisters }; }
+
+		inline const Scores & getMonkScores() const { return scores; }
+		inline const Followers & getBusyFollowers() const { return busyFollowers; }
 	};
 
 	void updateCompletenessOfCloisters(const Position & p, Array<Cloister, NUMBER_OF_CLOISTERS>& cloisters, BlocStatic<int, NUMBER_OF_PLAYERS>& scores, BlocStatic<char, NUMBER_OF_PLAYERS>& followers);
 	void rollBackCompletenessOfCloisters(const Position & p, Array<Cloister, NUMBER_OF_CLOISTERS>& cloisters, BlocStatic<int, NUMBER_OF_PLAYERS>& scores, BlocStatic<char, NUMBER_OF_PLAYERS>& followers);
 
-	void CloisterContainer::reachNoCloister(const Position & p) {
-		updateCompletenessOfCloisters(p, cloisters, scores, busyFollowers);
-		logs.push_back(false);
-	}
+	
 
 	inline void CloisterContainer::cancel(const Position & p)
 	{
@@ -61,33 +67,46 @@ namespace kar {
 		rollBackCompletenessOfCloisters(p, cloisters, scores, busyFollowers);
 	}
 
-	void updateCompletenessOfCloisters(const Position & p, Array<Cloister, NUMBER_OF_CLOISTERS>& cloisters, BlocStatic<int, NUMBER_OF_PLAYERS>& scores, BlocStatic<char, NUMBER_OF_PLAYERS>& followers) {
-		for (auto i = 0; i < cloisters.length(); i++) {
-			auto & c = cloisters[i];
-			if (c.withinRange(p)) {
-				c.incrCompleteness();
+	inline void CloisterContainer::setMonk(const char indexPlayer)
+	{
+		auto & c = cloisters.last();
 
-				if (c.isCompleted() && c.hasDirectFollower()) {
-					scores[c.getDirectFollower()] += c.score();
-					followers[c.getDirectFollower()]--;
-				}
-			}
+		c.setDirectFollower(indexPlayer);
+		if (c.isCompleted())
+			scores[indexPlayer] += c.score();
+		else
+			busyFollowers[indexPlayer]++;
+	}
+
+	inline void CloisterContainer::cancelMonk()
+	{
+		auto & c = cloisters.last();
+
+		const auto indexPlayer = c.getDirectFollower();
+		c.setNoDirectFollower();
+		if (c.isCompleted())
+			scores[indexPlayer] -= c.score();
+		else
+			busyFollowers[indexPlayer]--;
+	}
+
+	inline void CloisterContainer::noticeEnd()
+	{
+		for (auto it = getIterator(); it.isNotOver(); ++it) {
+			const auto & c = it.getCore();
+			scores[c.getDirectFollower()] += c.score();
 		}
 	}
 
-	void rollBackCompletenessOfCloisters(const Position & p, Array<Cloister, NUMBER_OF_CLOISTERS>& cloisters, BlocStatic<int, NUMBER_OF_PLAYERS>& scores, BlocStatic<char, NUMBER_OF_PLAYERS>& followers) {
-		for (auto i = 0; i < cloisters.length(); i++) {
-			auto & c = cloisters[i];
-			if (c.withinRange(p)) {
-				if (c.isCompleted() && c.hasDirectFollower()) {
-					scores[c.getDirectFollower()] -= c.score();
-					followers[c.getDirectFollower()]--;
-				}
-
-				c.decrCompleteness();
-			}
+	inline void CloisterContainer::unnoticeEnd()
+	{
+		for (auto it = getIterator(); it.isNotOver(); ++it) {
+			const auto & c = it.getCore();
+			scores[c.getDirectFollower()] -= c.score();
 		}
 	}
+
+	
 
 	template<class UnaryFunction>
 	inline void CloisterContainer::reachNewCloister(const Position & p, UnaryFunction isOccupied)

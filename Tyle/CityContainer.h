@@ -1,19 +1,20 @@
 #pragma once
-#include "Array.h"
-#include "TileBlueprint.h"
-#include "Road.h"
-#include "RoadIterator.h"
 #include "first.h"
-
 #include "nodeCommun.h"
 
-namespace kar {
+#include "Array.h"
+#include "BlocStatic.h"
+#include "City.h"
+#include "TileBlueprint.h"
+#include "CityIterator.h"
 
-	class RoadContainer {
+
+namespace kar {
+	class CityContainer {
 	public:
-		using Node = Road;
-		using Index = Road::Index;
-		using Nodes = Array<Node, NUMBER_OF_ROADNODES>;
+		using Node = City;
+		using Index = City::Index;
+		using Nodes = Array<Node, NUMBER_OF_CITYNODES>;
 		using Scores = BlocStatic<int, NUMBER_OF_PLAYERS>;
 		using Followers = BlocStatic<char, NUMBER_OF_PLAYERS>;
 		using Logs = Array<char, NUMBER_OF_TILES>;
@@ -26,12 +27,12 @@ namespace kar {
 
 		template <typename T>
 		void unlinkChildren(const T idx);
-		
-	public:
-		RoadContainer() : scores(0), followers(0) {}
-		~RoadContainer() = default;
 
-		void add(const TileBlueprint::RoadNodeBlueprints & rnbs);
+	public:
+		CityContainer() : scores(0), followers(0) {}
+		~CityContainer() = default;
+
+		void add(const TileBlueprint::CityNodeBlueprints & cnbs);
 		void makeFatherAndSon(const Index idxFather, const Index idxChild);
 		void checkForCompletedNodes();
 		void cancel();
@@ -40,56 +41,58 @@ namespace kar {
 		void unnoticeEnd();
 
 		int waysToSetFollower() const;
-		Index setFollower(int wayThief, char idxPlayer);
-		void cancelFollower(int wayThief);
+		Index setFollower(int wayKnight, char idxPlayer);
+		void cancelFollower(int wayKnight);
 
 		Index getIndexOfRoot(const Index idx) const { return nodes[idx].hasFather() ? getIndexOfRoot(nodes[idx].getFather()) : idx; }
 		int getLastNumberOfAddedRoads() const { return addedNumberOfNodesLogs.last(); }
 		int getNumberOfNodes() const { return nodes.length(); }
 
-		RoadIterator getIterator() const { return RoadIterator{nodes}; }
+		CityIterator getIterator() const { return CityIterator{ nodes }; }
 
-		inline const Scores & getThiefScores() const { return scores; }
+		inline const Scores & getKnightScores() const { return scores; }
 		inline const Followers & getBusyFollowers() const { return followers; }
 
 	};
 
-	
-
-	inline void RoadContainer::add(const TileBlueprint::RoadNodeBlueprints & rnbs)
+	inline void CityContainer::add(const TileBlueprint::CityNodeBlueprints & cnbs)
 	{
-		nodes.addLength(rnbs.length());
-		addedNumberOfNodesLogs.push(rnbs.length());
+		nodes.addLength(cnbs.length());
+		addedNumberOfNodesLogs.push(cnbs.length());
 
-		if (rnbs.length() == 1)
-			nodes.last().reset(rnbs[0].getNumberOfHoles());
-		else
-			if (rnbs.length() > 1) {
-				const auto first = nodes.length() - rnbs.length();
-				for (auto i = 0; i < rnbs.length(); i++)
-					nodes[first + i].reset(rnbs[i].getNumberOfHoles(), addedNumberOfNodesLogs.length());
+		if (cnbs.length() == 1) {
+			const auto & cnb = cnbs[0];
+			nodes.last().reset(cnb.getNumberOfHoles(), cnb.hasCrest());
+		} else
+			if (cnbs.length() > 1) {
+				const auto first = nodes.length() - cnbs.length();
+				const auto ambigiousPosition = addedNumberOfNodesLogs.length();
+				for (auto i = 0; i < cnbs.length(); i++) {
+					const auto & cnb = cnbs[i];
+					nodes[first + i].reset(cnb.getNumberOfHoles(), cnb.hasCrest(), ambigiousPosition);
+				}
 			}
+
 	}
 
-	inline void RoadContainer::makeFatherAndSon(const Index idxFather, const Index idxChild)
+	inline void CityContainer::makeFatherAndSon(const Index idxFather, const Index idxChild)
 	{
 		nodes[idxFather].becomeFatherOf(nodes[idxChild], idxFather, idxChild);
 	}
 
-	inline void RoadContainer::checkForCompletedNodes()
+	inline void CityContainer::checkForCompletedNodes()
 	{
 		auto nbNodesChecked = addedNumberOfNodesLogs.last();
 		auto first = nodes.length() - nbNodesChecked;
 		// décompte des points pour les routes terminées avec des partisans déjà dessus
 		for (auto i = 0; i < nbNodesChecked; i++) {
-			const auto & rn = nodes[first + i];
-			if (!rn.hasFather() && rn.isCompleted() && rn.hasAnyFollower())
-				noticeCompletedNode(rn, scores, followers);
+			const auto & nd = nodes[first + i];
+			if (!nd.hasFather() && nd.isCompleted() && nd.hasAnyFollower())
+				noticeCompletedNode(nd, scores, followers);
 		}
 	}
 
-	// nbNodes > 0
-	inline void RoadContainer::cancel()
+	inline void CityContainer::cancel()
 	{
 		auto nbNodesCanceled = addedNumberOfNodesLogs.pop();
 		auto first = nodes.length() - nbNodesCanceled;
@@ -100,7 +103,7 @@ namespace kar {
 		nodes.addLength(-nbNodesCanceled);
 	}
 
-	inline void RoadContainer::noticeEnd()
+	inline void CityContainer::noticeEnd()
 	{
 		for (auto i = 0; i < nodes.length(); i++) {
 			const auto & nd = nodes[i];
@@ -109,7 +112,7 @@ namespace kar {
 		}
 	}
 
-	inline void RoadContainer::unnoticeEnd()
+	inline void CityContainer::unnoticeEnd()
 	{
 		for (auto i = 0; i < nodes.length(); i++) {
 			const auto & nd = nodes[i];
@@ -118,7 +121,7 @@ namespace kar {
 		}
 	}
 
-	inline int RoadContainer::waysToSetFollower() const
+	inline int CityContainer::waysToSetFollower() const
 	{
 		auto ways = 0;
 		auto nbNodesChecked = addedNumberOfNodesLogs.last();
@@ -129,7 +132,7 @@ namespace kar {
 		return ways;
 	}
 
-	inline RoadContainer::Index RoadContainer::setFollower(int wayThief, char idxPlayer)
+	inline CityContainer::Index CityContainer::setFollower(int wayKnight, char idxPlayer)
 	{
 		const auto nbNodesChecked = addedNumberOfNodesLogs.last();
 		const auto first = nodes.length() - nbNodesChecked;
@@ -138,7 +141,7 @@ namespace kar {
 		for (auto i = 0; i < nbNodesChecked; i++) {
 			auto & rn = nodes[first + i];
 			if (rn.canSetFollower()) {
-				if (ways == wayThief) {
+				if (ways == wayKnight) {
 					noticeDirectFollower(rn, idxPlayer, scores, followers);
 					return first + i;
 				}
@@ -148,17 +151,17 @@ namespace kar {
 		throw "communism is a lie";
 	}
 
-	inline void RoadContainer::cancelFollower(int wayThief)
+	inline void CityContainer::cancelFollower(int wayKnight)
 	{
 		auto nbNodesChecked = addedNumberOfNodesLogs.last();
 		auto first = nodes.length() - nbNodesChecked;
 		auto ways = 0;
 
 		for (auto i = 0; i < nbNodesChecked; i++) {
-			auto & rn = nodes[first + i];
-			if (rn.canSetFollower()) {
-				if (ways == wayThief) {
-					unnoticeDirectFollower(rn, scores, followers);
+			auto & nd = nodes[first + i];
+			if (nd.canSetFollower()) {
+				if (ways == wayKnight) {
+					unnoticeDirectFollower(nd, scores, followers);
 					return;
 				}
 				ways++;
@@ -167,11 +170,9 @@ namespace kar {
 	}
 
 	template<typename T>
-	inline void RoadContainer::unlinkChildren(const T idx)
+	inline void CityContainer::unlinkChildren(const T idx)
 	{
 		for (auto i : nodes[idx].getSons())
 			nodes[i].setNoFather();
 	}
-
-	
 }

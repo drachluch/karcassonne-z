@@ -604,18 +604,24 @@ void Game::tiles_reach(const Position & p, IndexBlueprint indexBlueprint, const 
 	inventory[indexBlueprint]--;
 	remainingTiles--;
 
-	const TileBlueprint & tb = getBlueprint(indexBlueprint);
+	const auto & tb = getBlueprint(indexBlueprint);
 
 	tiles.push(Tile{ indexBlueprint, tb, direction });
 	positions.push(p);
 
-	cloisters_reach(p, tb.hasCloister());
-
-	auto idxTile = tiles.length() - 1;
+	if (tb.hasCloister()) {
+		auto lambda = [&](const Position & p) { return positions.find(p); };
+		
+		cloisters.reachNewCloister(p, lambda);
+	}
+	else
+		cloisters.reachNoCloister(p);
 	
 	roads.add(tb.getRoadNodeBlueprints());
 	linkRoads(p);
 	roads.checkForCompletedNodes();
+
+	const auto idxTile = tiles.length() - 1;
 
 	if (tb.getNumberOfCityNodes() > 0)
 		citynodes_reach(p, idxTile);
@@ -633,7 +639,7 @@ void Game::tiles_cancel()
 	const auto & t = tiles.pop();
 	const auto & tb = getBlueprint(t.getIndexBlueprint());
 
-	cloisters_cancel(positions.pop(), tb.hasCloister());
+	cloisters.cancel(positions.pop());
 	
 	roads.cancel();
 
@@ -645,55 +651,6 @@ void Game::tiles_cancel()
 	inventory[t.indexBlueprint]++;
 
 	remainingTiles++;
-}
-
-void Game::cloisters_reach(const Position & p, bool newCloister) 
-{
-	for (auto i = 0; i < cloisters.length(); i++) {
-		auto & c = cloisters[i];
-		if (c.withinRange(p)) {
-			c.incrCompleteness();
-
-			if (c.isCompleted() && c.hasDirectFollower()) {
-				scores[c.getDirectFollower()] += c.score();
-				followers[c.getDirectFollower()]++;
-			}
-		}
-	}
-
-	if (newCloister) {
-		cloisters.push(Cloister{p});
-		auto & c = cloisters.last();
-
-		const Position ps[8] = { p.east(), p.east().north(), p.east().south(), p.north(), p.west(), p.west().north(), p.west().south(), p.south() };
-
-		for (const auto & p : ps)
-			if (isOccupied(p))
-				c.incrCompleteness();
-
-	}
-}
-
-void Game::cloisters_cancel(const Position & p, bool newCloister) 
-{
-	for (auto i = 0; i < cloisters.length(); i++) {
-		auto & c = cloisters[i];
-		if (c.withinRange(p)) {
-			if (c.isCompleted() && c.hasDirectFollower()) {
-				scores[c.getDirectFollower()] -= c.score();
-				followers[c.getDirectFollower()]--;
-			}
-
-			c.decrCompleteness();
-		}
-	}
-
-	if (newCloister) {
-		if (cloisters.last().hasDirectFollower())
-			cancelMonk();
-		
-		cloisters.pop();
-	}
 }
 
 void Game::linkRoads(const Position & p)
@@ -1131,47 +1088,18 @@ bool Game::canSetTile(const Position & p, const TileBlueprint & tb, const Direct
 	return true;
 }
 
-bool Game::canSetMonk() const 
-{
-	return getBlueprint(tiles.last().getIndexBlueprint()).hasCloister() && !followerLogs.last().hasFollower();
-}
+bool Game::canSetMonk() const { return cloisters.canSetMonk(); }
 
 void Game::setMonk() 
 {
-	auto & c = cloisters.last();
-
-	if (!c.hasDirectFollower() && !followerLogs.last().hasFollower()) {
-		followerLogs.last().setMonk();
-
-		const int indexPlayer = getCurrentPlayer();
-		c.setDirectFollower(indexPlayer);
-		if (c.isCompleted())
-			scores[indexPlayer] += c.score();
-		else
-			followers[indexPlayer]--;
-	}
-	else {
-		throw "Can't set monk. Cloister already occupied, and according to the logs, a follower has already been set this turn.";
-	}
+	followerLogs.last().setMonk();
+	cloisters.setMonk(getCurrentPlayer());
 }
 
 void Game::cancelMonk() 
 {
-	auto & c = cloisters.last();
-
-	if (c.hasDirectFollower() && followerLogs.last().hasMonk()) {
-		followerLogs.last().setNoFollower();
-
-		const int indexPlayer = c.getDirectFollower();
-		c.setNoDirectFollower();
-		if (c.isCompleted())
-			scores[indexPlayer] -= c.score();
-		else
-			followers[indexPlayer]++;
-	}
-	else {
-		throw "Can't cancel monk. Cloister not occupied, or a follower has not been set, or the follower is not a monk.";
-	}
+	followerLogs.last().setNoFollower();
+	cloisters.cancelMonk();
 }
 
 int Game::waysToSetThief() const { return roads.waysToSetFollower(); }
@@ -1305,14 +1233,7 @@ void Game::cancel()
 
 void Game::end()
 {
-	const auto nbCloisters = getNumberCloisters();
-	
-	for (auto idxCloister = 0; idxCloister < nbCloisters; idxCloister++) {
-		const auto & c = getCloister(idxCloister);
-		if (!c.isCompleted() && c.hasDirectFollower())
-			scores[c.getDirectFollower()] += c.score();
-	}
-	
+	cloisters.noticeEnd();
 	roads.noticeEnd();
 }
 

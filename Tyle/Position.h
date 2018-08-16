@@ -6,11 +6,13 @@ namespace kar {
 
 	struct Position
 	{
-		int x = 0;
-		int y = 0;
+		using TypeCoord = short;
+
+		TypeCoord x = 0;
+		TypeCoord y = 0;
 
 		Position() = default;
-		Position(int xx, int yy) : x(xx), y(yy) {}
+		Position(TypeCoord xx, TypeCoord yy) : x(xx), y(yy) {}
 		Position(const Position & p) = default;
 		~Position() = default;
 

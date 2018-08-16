@@ -3,7 +3,6 @@
 #include "first.h"
 #include "Position.h"
 #include "TileBlueprint.h"
-#include "Cloister.h"
 #include "Tile.h"
 #include "Log.h"
 #include "Array.h"
@@ -11,6 +10,7 @@
 #include "RoadContainer.h"
 #include "CityNode.h"
 #include "FieldNode.h"
+#include "CloisterContainer.h"
 
 #include "NeighborStack.h"
 
@@ -40,7 +40,7 @@ namespace kar {
 		RoadContainer roads;
 		Array<CityNode, NUMBER_OF_CITYNODES> citynodes;
 		Array<FieldNode, NUMBER_OF_FIELDNODES> fieldnodes;
-		Array<Cloister, NUMBER_OF_CLOISTERS> cloisters;
+		CloisterContainer cloisters;
 
 		NeighborStack<char, MAX_NUMBER_INDEX_NEIGHBOR_CITIES> neighborCities;
 		NeighborStack<char, MAX_NUMBER_INDEX_NEIGHBOR_FIELDS> neighborFields;
@@ -56,9 +56,6 @@ namespace kar {
 
 		void tiles_reach(const Position & p, IndexBlueprint indexBlueprint, const Direction & direction);
 		void tiles_cancel();
-
-		void cloisters_reach(const Position & p, bool newCloister);
-		void cloisters_cancel(const Position & p, bool newCloister);
 
 		// nbNodes > 0
 		void linkRoads(const Position & p);
@@ -104,8 +101,6 @@ namespace kar {
 		const Position & getReachablePosition(int i) const { return reachablePositions[i]; }
 		const Position & getPosition(int i) const { return positions[i]; }
 		const Tile & getTile(int i) const { return tiles[i]; }
-		const Cloister & getCloister(int i) const { return cloisters[i]; }
-		//const Road & getRoad(int i) const { return roads[i]; }
 		const CityNode & getCityNode(int i) const { return citynodes[i]; }
 		const FieldNode & getFieldNode(int i) const { return fieldnodes[i]; }
 
@@ -114,20 +109,18 @@ namespace kar {
 		int getNumberPositions() const { return positions.length(); }
 		// getNumberTiles() == getNumberPositions()
 		int getNumberTiles() const { return tiles.length(); }
-		int getNumberCloisters() const { return cloisters.length(); }
-		int getNumberRoadNodes() const { return roads.getNumberOfNodes(); }
 		int getNumberCityNodes() const { return citynodes.length(); }
 		int getNumberFieldNodes() const { return fieldnodes.length(); }
 
+		CloisterIterator getCloisterIterator() const { return cloisters.getIterator(); }
 		RoadIterator getRoadIterator() const { return roads.getIterator(); }
 
 		const FollowerLog & getFollowerLog(int i) const { return followerLogs[i]; }
 
 
-		int getIndexPosition(const Position & p) const { for (int i = 0; i < positions.length(); i++) if (positions[i] == p) return i; return -1; }
-
-		bool isOccupied(const Position & p) const { for (int i = 0; i < positions.length(); i++) if (positions[i] == p) return true; return false; }
-		bool isReachable(const Position & p) const { for (int i = 0; i < reachablePositions.length(); i++) if (reachablePositions[i] == p) return true; return false; }
+		int getIndexPosition(const Position & p) const { return positions.indexOf(p); }
+		bool isOccupied(const Position & p) const { return positions.find(p); }
+		bool isReachable(const Position & p) const { return reachablePositions.find(p); }
 
 		void setTile(int indexReachablePosition, IndexBlueprint indexBlueprint, const Direction & direction);
 
@@ -158,7 +151,7 @@ namespace kar {
 		bool hasIdleFollower(int p) const { return (followers[p] - roads.getBusyFollowers()[p]) > 0; }
 		bool hasIdleFollower() const { return hasIdleFollower(getCurrentPlayer()); }
 
-		int getScore(int i) const { return scores[i] + roads.getThiefScores()[i]; }
+		int getScore(int i) const { return scores[i] + roads.getThiefScores()[i] + cloisters.getMonkScores()[i]; }
 
 		void cancel();
 

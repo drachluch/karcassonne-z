@@ -161,11 +161,8 @@ float evaluateCitiesRoadsAndCloistersState(const kar::Game & g)
 			score += cn.score() * 1.25f;
 	}
 
-	for (int i = 0, l = g.getNumberCloisters(); i < l; i++) {
-		const auto & c = g.getCloister(i);
-		if (c.hasDirectFollower() && !c.isCompleted())
-			score += c.score();
-	}
+	for (auto it = g.getCloisterIterator(); it.isNotOver(); ++it)
+		score += it.getCore().score();
 
 	return score;
 }
