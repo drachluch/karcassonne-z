@@ -24,7 +24,8 @@ int main(int argc, char * argv[]) {
 	} else {
 		std::cerr << "Gimme at least one argument.";
 		//try { roadnodeOnePlayer(); } catch (const char * msg) { std::cerr << msg; }
-		try { citiesRoadsAndCloisters_OnePlayer(); } catch (const char *msg) { std::cerr << msg; }
+		try { cloisterOnePlayer(); } catch (const char * msg) { std::cerr << msg; }
+		//try { citiesRoadsAndCloisters_OnePlayer(); } catch (const char *msg) { std::cerr << msg; }
 	}
 	
 

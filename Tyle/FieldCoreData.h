@@ -18,6 +18,9 @@ namespace kar {
 
 		void free_followers(Followers& workingFollowers) const { workingFollowers -= followers; }
 		void get_back_followers(Followers& workingFollowers) const { workingFollowers += followers; }
+
+		const Neighbors& getNeighbors() const { return neighbors; }
+		Neighbors& getNeighbors() { return neighbors; }
 	};
 
 

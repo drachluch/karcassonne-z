@@ -128,20 +128,15 @@ void citiesRoadsAndCloisters_OnePlayer()
 			//std::cerr << " score " << g.getScore(0) << std::endl;
 
 		}
+
+
 	}
 
 	g.end();
 	std::cerr << g.getScore(0) << std::endl;
 
-
-	//*
-	kar::writeHTMLHeader(std::cout);
-	std::cout << "<body><script language=\"javascript\">var state=";
-	kar::writeCurrentState(std::cout, g);
-	std::cout << ";var followers =";
-	kar::writeFollowers(std::cout, g);
-	std::cout << ";K.showLogState20180729(\"first\",state,followers);</script></body></html>";
-	//*/
+	//writeMap20180729(std::cout, g);
+	writeStats20180817(std::cout, g);
 
 }
 
@@ -155,10 +150,10 @@ float evaluateCitiesRoadsAndCloistersState(const kar::Game & g)
 			score += c.score() * .9375f;
 	}
 
-	for (int idxCitynode = 0, l = g.getNumberCityNodes(); idxCitynode < l; idxCitynode++) {
-		const auto & cn = g.getCityNode(idxCitynode);
-		if (!cn.hasFather() && cn.hasAnyFollower() && !cn.isCompleted())
-			score += cn.score() * 1.25f;
+	for (auto it = g.getCityIterator(); it.isNotOver(); ++it) {
+		const auto & c = it.getCore();
+		if (c.followers.max() > 0)
+			score += c.score() * 1.25f;
 	}
 
 	for (auto it = g.getCloisterIterator(); it.isNotOver(); ++it)

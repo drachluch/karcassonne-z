@@ -3,6 +3,17 @@
 
 namespace kar {
 
+	struct Bounds {
+		int xmax; int xmin; int ymax; int ymin;
+		void update(const Position & p) { if (p.x < xmin) xmin = p.x; else if (p.x > xmax) xmax = p.x; if (p.y < ymin) ymin = p.y; else if (p.y > ymax) ymax = p.y; }
+	};
+
+	void writeCurrentState(std::ostream & out, const Game & g);
+	void writeHTMLHeader(std::ostream & out);
+	void writeFollowers(std::ostream & out, const Game & g);
+
+
+
 	std::ostream & operator<<(std::ostream & out, const Bounds & b) { return out << "{\"xmin\":" << b.xmin << ",\"xmax\":" << b.xmax << ",\"ymin\":" << b.ymin << ",\"ymax\":" << b.ymax << "}"; }
 	void writeTileInfo(std::ostream & out, const Position & p, const Tile & t) { out << "{\"name\":\"" << t.name << "\",\"direction\":" << t.direction.get() << ",\"position\":" << p << "}"; }
 
@@ -64,6 +75,44 @@ namespace kar {
 		}
 		writeFollowerInfo(out, g.getPosition(l), g.getFollowerLog(l), l % g.getNumberOfPlayers());
 		out << "]";
+	}
+
+	void writeMap20180729(std::ostream & out, const Game & g)
+	{
+		writeHTMLHeader(out);
+		out << "<body><script language=\"javascript\">var state=";
+		writeCurrentState(out, g);
+		out << ";var followers =";
+		writeFollowers(out, g);
+		out << ";K.showLogState20180729(\"first\",state,followers);</script></body></html>";
+	}
+
+	void writeStats20180817(std::ostream & out, Game & g)
+	{
+		writeHTMLHeader(out);
+		out << "<body><script language=\"javascript\">var state=";
+		writeCurrentState(out, g);
+		out << ";var followers =";
+		writeFollowers(out, g);
+		out << ";K.showLogState20180729(\"first\",state,followers);";
+		out << "var colNames=[\"turn\",\"city points\",\"road points\",\"cloister points\"];";
+		out << "var rows=";
+		
+		{
+			out << "[";
+			out << "[\"end\"," << g.getKnightScore(0) << ',' << g.getThiefScore(0) << ',' << g.getMonkScore(0) << "]";
+			g.cancelEnd();
+
+			for (; g.getNumberTiles() > 0; g.cancel())
+				out << ",[" << g.getNumberTiles() << ',' << g.getKnightScore(0) << ',' << g.getThiefScore(0) << ',' << g.getMonkScore(0) << ']';
+
+			out << ",[" << g.getNumberTiles() << ',' << g.getKnightScore(0) << ',' << g.getThiefScore(0) << ',' << g.getMonkScore(0) << ']';
+
+			out << "]";
+		}
+
+		out << ";K.showTable20180817(\"stats20180817\",colNames,rows);";
+		out << "</script></body></html>";
 	}
 
 

@@ -166,6 +166,30 @@ var K = (function(K) {
 		})());
 	};
 	
+	K.showTable20180817 = function(idx, colNames, rows) {
+		let table = document.createElement("table");
+		table.id = idx;
+		// première ligne:
+		let tr = document.createElement("tr");
+		for (let i = 0; i < colNames.length; i++) {
+			let th = document.createElement("th");
+			th.appendChild(document.createTextNode(colNames[i]));
+			tr.appendChild(th);
+		}
+		table.appendChild(tr);
+		// lignes suivantes:
+		for (let r = 0; r < rows.length; r++) {
+			let tr = document.createElement("tr");
+			for (let i = 0; i < colNames.length; i++) {
+				let td = document.createElement("td");
+				td.appendChild(document.createTextNode(rows[r][i]));
+				tr.appendChild(td);
+			}
+			table.appendChild(tr);
+		}
+		document.body.appendChild(table);
+	};
+	
 	return K;
 })(K || {});
 

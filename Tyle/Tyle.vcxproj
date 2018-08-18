@@ -132,7 +132,9 @@
     <ClCompile Include="Direction.cpp" />
     <ClCompile Include="Drawer.cpp" />
     <ClCompile Include="Field.cpp" />
+    <ClCompile Include="FieldContainer.cpp" />
     <ClCompile Include="FieldCoreData.cpp" />
+    <ClCompile Include="FieldIterator.cpp" />
     <ClCompile Include="FieldNode.cpp" />
     <ClCompile Include="FieldNodeBlueprint.cpp" />
     <ClCompile Include="Game.cpp" />
@@ -140,6 +142,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainTest.cpp" />
     <ClCompile Include="MainTest2.cpp" />
+    <ClCompile Include="Neighborhood.cpp" />
     <ClCompile Include="NeighborStack.cpp" />
     <ClCompile Include="NodeCommun.cpp" />
     <ClCompile Include="NodeContainer.cpp" />
@@ -172,7 +175,9 @@
     <ClInclude Include="Direction.h" />
     <ClInclude Include="Drawer.h" />
     <ClInclude Include="Field.h" />
+    <ClInclude Include="FieldContainer.h" />
     <ClInclude Include="FieldCoreData.h" />
+    <ClInclude Include="FieldIterator.h" />
     <ClInclude Include="FieldNode.h" />
     <ClInclude Include="FieldNodeBlueprint.h" />
     <ClInclude Include="FieldPosition.h" />
@@ -181,6 +186,7 @@
     <ClInclude Include="Log.h" />
     <ClInclude Include="MainTest.h" />
     <ClInclude Include="MainTest2.h" />
+    <ClInclude Include="Neighborhood.h" />
     <ClInclude Include="NeighborStack.h" />
     <ClInclude Include="Node.h" />
     <ClInclude Include="nodeCommun.h" />

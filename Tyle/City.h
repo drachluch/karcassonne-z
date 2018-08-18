@@ -15,7 +15,6 @@ namespace kar {
 		using Sons = std::vector<Index>;
 		using Followers = BlocStatic<char, NUMBER_OF_PLAYERS>;
 		using Scores = BlocStatic<int, NUMBER_OF_PLAYERS>;
-		using Neighbors = Bloc<char>;
 		using AmbigiousPositions = std::vector<char>;
 
 	private:
@@ -29,7 +28,6 @@ namespace kar {
 		int garbageFollower = -2;
 		
 		AmbigiousPositions ambigiousPositions;
-		Neighbors neighborFields = { 0, nullptr };
 
 		CoreData core;
 		
@@ -57,9 +55,6 @@ namespace kar {
 
 		bool canSetFollower() const { return !hasFather() && garbageFollower != -1; }
 		bool isNotWorth() const { return hasFather() || isCompleted(); }
-
-		const Neighbors & getNeighborFields() { return neighborFields; }
-		void setNeighborFields(const Neighbors & b) { neighborFields = b; }
 	};
 
 	inline void City::reset(char nbHoles, bool _crest) {

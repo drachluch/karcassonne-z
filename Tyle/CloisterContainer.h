@@ -58,8 +58,11 @@ namespace kar {
 			const auto & c = cloisters.pop();
 
 			if (c.hasDirectFollower()) {
-				scores[c.getDirectFollower()] -= c.score();
-				busyFollowers[c.getDirectFollower()]--;
+				if (c.isCompleted()) {
+					scores[c.getDirectFollower()] -= c.score();
+				} else {
+					busyFollowers[c.getDirectFollower()]--;
+				}
 			}
 		}
 

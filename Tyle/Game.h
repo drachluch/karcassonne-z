@@ -8,9 +8,9 @@
 #include "Array.h"
 
 #include "RoadContainer.h"
-#include "CityNode.h"
-#include "FieldNode.h"
+#include "FieldContainer.h"
 #include "CloisterContainer.h"
+#include "CityContainer.h"
 
 #include "NeighborStack.h"
 
@@ -38,18 +38,14 @@ namespace kar {
 		Array<FollowerLog, NUMBER_OF_TILES> followerLogs;
 
 		RoadContainer roads;
-		Array<CityNode, NUMBER_OF_CITYNODES> citynodes;
-		Array<FieldNode, NUMBER_OF_FIELDNODES> fieldnodes;
+		CityContainer cities;
+		FieldContainer fields;
 		CloisterContainer cloisters;
-
-		NeighborStack<char, MAX_NUMBER_INDEX_NEIGHBOR_CITIES> neighborCities;
-		NeighborStack<char, MAX_NUMBER_INDEX_NEIGHBOR_FIELDS> neighborFields;
 
 		Array<Position, 2 * NUMBER_OF_TILES + 2> reachablePositions;
 		Array<ReachablePositionLog, NUMBER_OF_TILES> reachableLogs;
 
-		int scores[NUMBER_OF_PLAYERS];
-		int followers[NUMBER_OF_PLAYERS];
+		BlocStatic<int, NUMBER_OF_PLAYERS> scores;
 
 		void reachablePositions_reach(int ir);
 		void reachablePositions_cancel(const Position & pCancel);
@@ -58,23 +54,12 @@ namespace kar {
 		void tiles_cancel();
 
 		// nbNodes > 0
-		void linkRoads(const Position & p);
-
-		// nbNodes > 0
-		void citynodes_reach(const Position & p, int idxTile);
-		void citynodes_setNeighbors(int idxTile);
-		void citynodes_cancel(int nbNodes);
+		void linkRoads(const Position& p);
+		void linkCities(const Position& p);
+		void linkFields(const Position& p);
 
 		// nbFields > 0
-		void fieldnodes_reach(const Position & p, int idxTile);
 		void fieldnodes_setNeighbors(int idxTile);
-		void fieldnodes_cancel(int nbNodes);
-
-		void setKnightOnCitynode(int indexCitynode);
-		void cancelKnightOnCitynode(int indexCitynode);
-
-		void setFarmerOnFieldnode(int indexFieldnode);
-		void cancelFarmerOnFieldnode(int indexFieldnode);
 
 		void discardedBlueprints_reach();
 		void discardedBlueprints_cancel();
@@ -101,19 +86,16 @@ namespace kar {
 		const Position & getReachablePosition(int i) const { return reachablePositions[i]; }
 		const Position & getPosition(int i) const { return positions[i]; }
 		const Tile & getTile(int i) const { return tiles[i]; }
-		const CityNode & getCityNode(int i) const { return citynodes[i]; }
-		const FieldNode & getFieldNode(int i) const { return fieldnodes[i]; }
 
 		int getNumberReachablePositions() const { return reachablePositions.length(); }
 		// getNumberPositions() == getNumberTiles()
 		int getNumberPositions() const { return positions.length(); }
 		// getNumberTiles() == getNumberPositions()
 		int getNumberTiles() const { return tiles.length(); }
-		int getNumberCityNodes() const { return citynodes.length(); }
-		int getNumberFieldNodes() const { return fieldnodes.length(); }
 
 		CloisterIterator getCloisterIterator() const { return cloisters.getIterator(); }
 		RoadIterator getRoadIterator() const { return roads.getIterator(); }
+		CityIterator getCityIterator() const { return cities.getIterator(); }
 
 		const FollowerLog & getFollowerLog(int i) const { return followerLogs[i]; }
 
@@ -148,21 +130,24 @@ namespace kar {
 		void previousPlayer() { currentPlayer = (currentPlayer + NUMBER_OF_PLAYERS - 1) % NUMBER_OF_PLAYERS; }
 		int getNumberOfPlayers() const { return NUMBER_OF_PLAYERS; }
 
-		bool hasIdleFollower(int p) const { return (followers[p] - roads.getBusyFollowers()[p]) > 0; }
+		bool hasIdleFollower(int p) const { return (6 - roads.getBusyFollowers()[p] - cities.getBusyFollowers()[p] - fields.getBusyFollowers()[p]) > 0; }
 		bool hasIdleFollower() const { return hasIdleFollower(getCurrentPlayer()); }
 
-		int getScore(int i) const { return scores[i] + roads.getThiefScores()[i] + cloisters.getMonkScores()[i]; }
+		int getScore(int i) const { return scores[i] + roads.getThiefScores()[i] + cloisters.getMonkScores()[i] + cities.getKnightScores()[i]; }
+		int getThiefScore(int i) const { return roads.getThiefScores()[i]; }
+		int getKnightScore(int i) const { return cities.getKnightScores()[i]; }
+		int getMonkScore(int i) const { return cloisters.getMonkScores()[i]; }
 
 		void cancel();
 
 		void end();
+		void cancelEnd();
 
 	};
 
 
 
-	void setNeighborFields(CityNode & cn, const CityNodeBlueprint & cnb, const Array<FieldNode, NUMBER_OF_FIELDNODES> & fieldnodes, int firstField, NeighborStack<char, MAX_NUMBER_INDEX_NEIGHBOR_FIELDS> & neighborFields);
-	void setNeighborCities(FieldNode & fn, const FieldNodeBlueprint & fnb, const Array<CityNode, NUMBER_OF_CITYNODES> & citynodes, int firstCity, NeighborStack<char, MAX_NUMBER_INDEX_NEIGHBOR_CITIES> & neighborCities);
+	
 
 
 	

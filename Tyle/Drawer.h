@@ -1,25 +1,11 @@
 #pragma once
-#include "Position.h"
 #include "Game.h"
 #include <ostream>
 
 namespace kar {
+	void writeMap20180729(std::ostream & out, const Game & g);
 
-
-	struct Bounds {
-		int xmax; int xmin; int ymax; int ymin;
-		void update(const Position & p) { if (p.x < xmin) xmin = p.x; else if (p.x > xmax) xmax = p.x; if (p.y < ymin) ymin = p.y; else if (p.y > ymax) ymax = p.y; }
-	};
-
-
-
-	void writeCurrentState(std::ostream & out, const Game & g);
-	void writeHTMLHeader(std::ostream & out);
-
-	void writeFollowers(std::ostream & out, const Game & g);
-
+	// !! attention : la partie est déroulée dans le sens opposé, ce qui la laissera dans l'état de départ d'une partie vierge.
+	void writeStats20180817(std::ostream & out, Game & g);
 }
-
-
-
 

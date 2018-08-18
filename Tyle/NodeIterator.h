@@ -16,6 +16,7 @@ namespace kar {
 		~NodeIterator() = default;
 
 		inline bool isOver() const { return currentNode >= nodes.length(); }
+		inline bool isNotOver() const { return currentNode < nodes.length(); }
 		void operator++() {
 			currentNode++;
 			for (; currentNode < nodes.length() && nodes[0].isNotWorth(); currentNode++);

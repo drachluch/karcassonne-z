@@ -44,6 +44,8 @@ void cloisterOnePlayer()
 			g.discardBlueprint(idxBlueprint);
 		else {
 			//std::cerr << g.getReachablePosition(idxPosition) << " : " << idxBlueprint << " : " << dir.get() << std::endl;
+
+
 			g.setTile(idxPosition, idxBlueprint, dir);
 			if (g.hasIdleFollower() && g.canSetMonk())
 				g.setMonk();
@@ -54,13 +56,8 @@ void cloisterOnePlayer()
 	std::cerr << g.getScore(0) << std::endl;
 
 
-	kar::writeHTMLHeader(std::cout);
-	std::cout << "<body><script language=\"javascript\">var state=";
-	kar::writeCurrentState(std::cout, g);
-	std::cout << ";var followers =";
-	kar::writeFollowers(std::cout, g);
-	std::cout << ";K.showLogState20180729(\"first\",state,followers);</script></body></html>";
-
+	//writeMap20180729(std::cout, g);
+	writeStats20180817(std::cout, g);
 }
 
 
@@ -221,15 +218,8 @@ void roadnodeOnePlayer()
 	g.end();
 	std::cerr << g.getScore(0) << std::endl;
 
-
-	//*
-	kar::writeHTMLHeader(std::cout);
-	std::cout << "<body><script language=\"javascript\">var state=";
-	kar::writeCurrentState(std::cout, g);
-	std::cout << ";var followers =";
-	kar::writeFollowers(std::cout, g);
-	std::cout << ";K.showLogState20180729(\"first\",state,followers);</script></body></html>";
-	//*/
+	//writeMap20180729(std::cout, g);
+	writeStats20180817(std::cout, g);
 }
 
 float exploreTheFuture_roadnodeOnePlayer(kar::Game & g, int depth)
@@ -427,16 +417,8 @@ void bothOnePlayer()
 	g.end();
 	std::cerr << g.getScore(0) << std::endl;
 
-
-	//*
-	kar::writeHTMLHeader(std::cout);
-	std::cout << "<body><script language=\"javascript\">var state=";
-	kar::writeCurrentState(std::cout, g);
-	std::cout << ";var followers =";
-	kar::writeFollowers(std::cout, g);
-	std::cout << ";K.showLogState20180729(\"first\",state,followers);</script></body></html>";
-	//*/
-
+	//writeMap20180729(std::cout, g);
+	writeStats20180817(std::cout, g);
 }
 
 float evaluateBothState(const kar::Game & g)

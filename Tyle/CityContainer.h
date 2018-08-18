@@ -44,8 +44,10 @@ namespace kar {
 		Index setFollower(int wayKnight, char idxPlayer);
 		void cancelFollower(int wayKnight);
 
-		Index getIndexOfRoot(const Index idx) const { return nodes[idx].hasFather() ? getIndexOfRoot(nodes[idx].getFather()) : idx; }
-		int getLastNumberOfAddedRoads() const { return addedNumberOfNodesLogs.last(); }
+		Index getIndexOfRoot(const Index idx) const;
+		const City& getRoot(const Index idx) const;
+
+		int getLastNumberOfAddedNodes() const { return addedNumberOfNodesLogs.last(); }
 		int getNumberOfNodes() const { return nodes.length(); }
 
 		CityIterator getIterator() const { return CityIterator{ nodes }; }
@@ -167,6 +169,18 @@ namespace kar {
 				ways++;
 			}
 		}
+	}
+
+	inline CityContainer::Index CityContainer::getIndexOfRoot(const Index idx) const
+	{
+		auto currentIdx = idx;
+		for (; nodes[currentIdx].hasFather(); currentIdx = nodes[currentIdx].getFather());
+		return currentIdx;
+	}
+
+	inline const City & CityContainer::getRoot(const Index idx) const
+	{
+		return nodes[getIndexOfRoot(idx)];
 	}
 
 	template<typename T>

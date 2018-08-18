@@ -29,7 +29,7 @@ namespace kar {
 		}
 
 		T & operator[](int i) {
-			if (i < 0 || i >= _length)
+			if (i < 0 || i >= _length || i >= L)
 				throw "Array : out of bound d";
 			return ts[i];
 		}
