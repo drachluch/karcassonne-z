@@ -1,6 +1,5 @@
 #include "Game.h"
 #include <string>
-#include "BlocStaticSorted.h"
 #include "Neighborhood.h"
 
 namespace kar {
@@ -798,7 +797,7 @@ void Game::discardedBlueprints_cancel()
 }
 
 Game::Game()
-	: random_engine(std::random_device()()), scores(0)
+	: random_engine(std::random_device()()), farmerScores(0)
 {
 	memcpy(inventory, standardInventory, sizeof(standardInventory));
 	
@@ -958,7 +957,7 @@ void Game::end()
 	cloisters.noticeEnd();
 	roads.noticeEnd();
 	cities.noticeEnd();
-	scores = countEndFarmerScore(fields, cities);
+	farmerScores = countEndFarmerScore(fields, cities);
 }
 
 void Game::cancelEnd()
@@ -966,9 +965,7 @@ void Game::cancelEnd()
 	cloisters.unnoticeEnd();
 	roads.unnoticeEnd();
 	cities.unnoticeEnd();
-	scores.reset(0);
-	
-	
+	farmerScores.reset(0);
 }
 
 

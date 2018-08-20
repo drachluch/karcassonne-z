@@ -1,6 +1,7 @@
 #include <iostream>
 #include "MainTest.h"
 #include "MainTest2.h"
+#include "MainTestLonelyFarmer.h"
 
 int main(int argc, char * argv[]) {
 	if (argc >= 2) {
@@ -16,6 +17,9 @@ int main(int argc, char * argv[]) {
 			break;
 		case 'k':
 			try { citiesRoadsAndCloisters_OnePlayer(); } catch (const char *msg) { std::cerr << msg; }
+			break;
+		case 'f':
+			try { oneFarmer_OnePlayer(); } catch (const char *msg) { std::cerr << msg; }
 			break;
 		default:
 			std::cerr << "First argument must be 'r' or 'c'.";

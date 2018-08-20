@@ -1,21 +1,22 @@
 #pragma once
 #include <vector>
 #include "first.h"
-#include "BlocStatic.h"
-#include "Bloc.h"
 #include "CityCoreData.h"
 #include "CityNodeBlueprint.h"
+#include "BlocStatic.h"
+
+#include "Followers.h"
+#include "Scores.h"
 
 namespace kar {
 	class City
 	{
 	public:
 		using CoreData = CityCoreData;
-		using Index = signed char;
+		using Index = char;
 		using Sons = std::vector<Index>;
-		using Followers = BlocStatic<char, NUMBER_OF_PLAYERS>;
-		using Scores = BlocStatic<int, NUMBER_OF_PLAYERS>;
 		using AmbigiousPositions = std::vector<char>;
+		using NodeBlueprint = CityNodeBlueprint;
 
 	private:
 		Index father = -1;
@@ -35,8 +36,8 @@ namespace kar {
 		City() = default;
 		~City() = default;
 
-		void reset(char nbHoles, bool _crest);
-		void reset(char nbHoles, bool _crest, char ambigiousPosition);
+		void reset(const NodeBlueprint& nb);
+		void reset(const NodeBlueprint& nb, char ambigiousPosition);
 		void becomeFatherOf(City& ndSon, const Index idxFather, const Index idxSon);
 
 		Index getFather() const { return father; }
@@ -57,19 +58,16 @@ namespace kar {
 		bool isNotWorth() const { return hasFather() || isCompleted(); }
 	};
 
-	inline void City::reset(char nbHoles, bool _crest) {
+	inline void City::reset(const NodeBlueprint& nb) {
 		father = -1;
 		sons.clear();
 		garbageFollower = -2;
-		core.followers.reset(0);
-		core.coveredArea = 1;
-		core.holes = nbHoles;
-		core.crest = _crest;
+		core.reset(nb);
 		ambigiousPositions.clear();
 	}
 
-	inline void City::reset(char nbHoles, bool _crest, char ambigiousPosition) {
-		reset(nbHoles, _crest);
+	inline void City::reset(const NodeBlueprint& nb, char ambigiousPosition) {
+		reset(nb);
 		ambigiousPositions.push_back(ambigiousPosition);
 	}
 

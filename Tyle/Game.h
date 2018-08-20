@@ -12,8 +12,6 @@
 #include "CloisterContainer.h"
 #include "CityContainer.h"
 
-#include "NeighborStack.h"
-
 
 
 namespace kar {
@@ -45,7 +43,7 @@ namespace kar {
 		Array<Position, 2 * NUMBER_OF_TILES + 2> reachablePositions;
 		Array<ReachablePositionLog, NUMBER_OF_TILES> reachableLogs;
 
-		BlocStatic<int, NUMBER_OF_PLAYERS> scores;
+		BlocStatic<int, NUMBER_OF_PLAYERS> farmerScores;
 
 		void reachablePositions_reach(int ir);
 		void reachablePositions_cancel(const Position & pCancel);
@@ -133,10 +131,11 @@ namespace kar {
 		bool hasIdleFollower(int p) const { return (6 - roads.getBusyFollowers()[p] - cities.getBusyFollowers()[p] - fields.getBusyFollowers()[p]) > 0; }
 		bool hasIdleFollower() const { return hasIdleFollower(getCurrentPlayer()); }
 
-		int getScore(int i) const { return scores[i] + roads.getThiefScores()[i] + cloisters.getMonkScores()[i] + cities.getKnightScores()[i]; }
+		int getScore(int i) const { return farmerScores[i] + roads.getThiefScores()[i] + cloisters.getMonkScores()[i] + cities.getKnightScores()[i]; }
 		int getThiefScore(int i) const { return roads.getThiefScores()[i]; }
 		int getKnightScore(int i) const { return cities.getKnightScores()[i]; }
 		int getMonkScore(int i) const { return cloisters.getMonkScores()[i]; }
+		int getFarmerScore(int i) const { return farmerScores[i]; }
 
 		void cancel();
 

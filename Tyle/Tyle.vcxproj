@@ -116,15 +116,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Array.cpp" />
-    <ClCompile Include="Bloc.cpp" />
     <ClCompile Include="BlocStatic.cpp" />
-    <ClCompile Include="BlocStaticSorted.cpp" />
     <ClCompile Include="City.cpp" />
     <ClCompile Include="CityContainer.cpp" />
-    <ClCompile Include="CityCore.cpp" />
     <ClCompile Include="CityCoreData.cpp" />
     <ClCompile Include="CityIterator.cpp" />
-    <ClCompile Include="CityNode.cpp" />
     <ClCompile Include="CityNodeBlueprint.cpp" />
     <ClCompile Include="Cloister.cpp" />
     <ClCompile Include="CloisterContainer.cpp" />
@@ -135,17 +131,16 @@
     <ClCompile Include="FieldContainer.cpp" />
     <ClCompile Include="FieldCoreData.cpp" />
     <ClCompile Include="FieldIterator.cpp" />
-    <ClCompile Include="FieldNode.cpp" />
     <ClCompile Include="FieldNodeBlueprint.cpp" />
+    <ClCompile Include="Followers.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainTest.cpp" />
     <ClCompile Include="MainTest2.cpp" />
+    <ClCompile Include="MainTestLonelyFarmer.cpp" />
     <ClCompile Include="Neighborhood.cpp" />
-    <ClCompile Include="NeighborStack.cpp" />
     <ClCompile Include="NodeCommun.cpp" />
-    <ClCompile Include="NodeContainer.cpp" />
     <ClCompile Include="NodeIterator.cpp" />
     <ClCompile Include="Position.cpp" />
     <ClCompile Include="Road.cpp" />
@@ -153,21 +148,18 @@
     <ClCompile Include="RoadCoreData.cpp" />
     <ClCompile Include="RoadIterator.cpp" />
     <ClCompile Include="RoadNodeBlueprint.cpp" />
+    <ClCompile Include="Scores.cpp" />
     <ClCompile Include="SideType.cpp" />
     <ClCompile Include="Tile.cpp" />
     <ClCompile Include="TileBlueprint.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Array.h" />
-    <ClInclude Include="Bloc.h" />
     <ClInclude Include="BlocStatic.h" />
-    <ClInclude Include="BlocStaticSorted.h" />
     <ClInclude Include="City.h" />
     <ClInclude Include="CityContainer.h" />
-    <ClInclude Include="CityCore.h" />
     <ClInclude Include="CityCoreData.h" />
     <ClInclude Include="CityIterator.h" />
-    <ClInclude Include="CityNode.h" />
     <ClInclude Include="CityNodeBlueprint.h" />
     <ClInclude Include="Cloister.h" />
     <ClInclude Include="CloisterContainer.h" />
@@ -178,19 +170,17 @@
     <ClInclude Include="FieldContainer.h" />
     <ClInclude Include="FieldCoreData.h" />
     <ClInclude Include="FieldIterator.h" />
-    <ClInclude Include="FieldNode.h" />
     <ClInclude Include="FieldNodeBlueprint.h" />
     <ClInclude Include="FieldPosition.h" />
     <ClInclude Include="first.h" />
+    <ClInclude Include="Followers.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="MainTest.h" />
     <ClInclude Include="MainTest2.h" />
+    <ClInclude Include="MainTestLonelyFarmer.h" />
     <ClInclude Include="Neighborhood.h" />
-    <ClInclude Include="NeighborStack.h" />
-    <ClInclude Include="Node.h" />
     <ClInclude Include="nodeCommun.h" />
-    <ClInclude Include="NodeContainer.h" />
     <ClInclude Include="NodeIterator.h" />
     <ClInclude Include="RoadContainer.h" />
     <ClInclude Include="Position.h" />
@@ -198,6 +188,7 @@
     <ClInclude Include="RoadCoreData.h" />
     <ClInclude Include="RoadIterator.h" />
     <ClInclude Include="RoadNodeBlueprint.h" />
+    <ClInclude Include="Scores.h" />
     <ClInclude Include="SideType.h" />
     <ClInclude Include="Tile.h" />
     <ClInclude Include="TileBlueprint.h" />

@@ -1,12 +1,11 @@
 #pragma once
-#include "first.h"
-#include "BlocStatic.h"
+#include "CityNodeBlueprint.h"
+#include "Followers.h"
+#include "Scores.h"
 
 namespace kar {
 
 	struct CityCoreData {
-		using Followers = BlocStatic<char, NUMBER_OF_PLAYERS>;
-		using Scores = BlocStatic<int, NUMBER_OF_PLAYERS>;
 
 		Followers followers;
 		char coveredArea = 1;
@@ -16,13 +15,19 @@ namespace kar {
 		CityCoreData() : followers(0) {}
 		~CityCoreData() = default;
 
+		void reset(const CityNodeBlueprint& nb) {
+			followers.reset(0);
+			coveredArea = 1;
+			holes = nb.getNumberOfHoles();
+			crest = nb.hasCrest() ? 1 : 0;
+		}
 		int score() const { return (holes == 0 ? 2 : 1) * (coveredArea + crest); }
 		bool isCompleted() const { return holes == 0; }
 		void give_points(Scores & scores) const {
 			const auto maxF = followers.max();
 			if (maxF > 0) {
 				const auto points = score();
-				for (auto i = 0; i < NUMBER_OF_PLAYERS; i++)
+				for (auto i = 0; i < followers.length(); i++)
 					if (followers[i] == maxF)
 						scores[i] += points;
 			}
@@ -31,7 +36,7 @@ namespace kar {
 			const auto maxF = followers.max();
 			if (maxF > 0) {
 				const auto points = score();
-				for (auto i = 0; i < NUMBER_OF_PLAYERS; i++)
+				for (auto i = 0; i < followers.length(); i++)
 					if (followers[i] == maxF)
 						scores[i] -= points;
 			}

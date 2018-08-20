@@ -21,13 +21,15 @@ namespace kar {
 		BlocStatic & operator-=(const BlocStatic & b) { for (int i = 0; i < L; i++) elements[i] -= b.elements[i]; return *this; }
 		BlocStatic & operator=(const BlocStatic & b) { memcpy(elements, b.elements, sizeof(elements)); return *this; }
 
-		const T max() const {
+		auto max() const {
 			T m = elements[0];
 			for (int i = 1; i < L; i++)
 				if (m < elements[i])
 					m = elements[i];
 			return m;
 		}
+
+		auto length() const { return L; }
 	};
 	
 

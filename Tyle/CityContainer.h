@@ -8,6 +8,9 @@
 #include "TileBlueprint.h"
 #include "CityIterator.h"
 
+#include "Followers.h"
+#include "Scores.h"
+
 
 namespace kar {
 	class CityContainer {
@@ -15,8 +18,6 @@ namespace kar {
 		using Node = City;
 		using Index = City::Index;
 		using Nodes = Array<Node, NUMBER_OF_CITYNODES>;
-		using Scores = BlocStatic<int, NUMBER_OF_PLAYERS>;
-		using Followers = BlocStatic<char, NUMBER_OF_PLAYERS>;
 		using Logs = Array<char, NUMBER_OF_TILES>;
 
 	private:
@@ -62,17 +63,14 @@ namespace kar {
 		nodes.addLength(cnbs.length());
 		addedNumberOfNodesLogs.push(cnbs.length());
 
-		if (cnbs.length() == 1) {
-			const auto & cnb = cnbs[0];
-			nodes.last().reset(cnb.getNumberOfHoles(), cnb.hasCrest());
-		} else
+		if (cnbs.length() == 1)
+			nodes.last().reset(cnbs[0]);
+		else
 			if (cnbs.length() > 1) {
 				const auto first = nodes.length() - cnbs.length();
 				const auto ambigiousPosition = addedNumberOfNodesLogs.length();
-				for (auto i = 0; i < cnbs.length(); i++) {
-					const auto & cnb = cnbs[i];
-					nodes[first + i].reset(cnb.getNumberOfHoles(), cnb.hasCrest(), ambigiousPosition);
-				}
+				for (auto i = 0; i < cnbs.length(); i++)
+					nodes[first + i].reset(cnbs[i], ambigiousPosition);
 			}
 
 	}
@@ -84,8 +82,8 @@ namespace kar {
 
 	inline void CityContainer::checkForCompletedNodes()
 	{
-		auto nbNodesChecked = addedNumberOfNodesLogs.last();
-		auto first = nodes.length() - nbNodesChecked;
+		const auto nbNodesChecked = addedNumberOfNodesLogs.last();
+		const auto first = nodes.length() - nbNodesChecked;
 		// décompte des points pour les routes terminées avec des partisans déjà dessus
 		for (auto i = 0; i < nbNodesChecked; i++) {
 			const auto & nd = nodes[first + i];
@@ -96,8 +94,8 @@ namespace kar {
 
 	inline void CityContainer::cancel()
 	{
-		auto nbNodesCanceled = addedNumberOfNodesLogs.pop();
-		auto first = nodes.length() - nbNodesCanceled;
+		const auto nbNodesCanceled = addedNumberOfNodesLogs.pop();
+		const auto first = nodes.length() - nbNodesCanceled;
 		for (auto i = 0; i < nbNodesCanceled; i++) {
 			noticeCanceled(nodes[first + i], scores, followers);
 			unlinkChildren(first + i);
@@ -126,8 +124,8 @@ namespace kar {
 	inline int CityContainer::waysToSetFollower() const
 	{
 		auto ways = 0;
-		auto nbNodesChecked = addedNumberOfNodesLogs.last();
-		auto first = nodes.length() - nbNodesChecked;
+		const auto nbNodesChecked = addedNumberOfNodesLogs.last();
+		const auto first = nodes.length() - nbNodesChecked;
 		for (auto i = 0; i < nbNodesChecked; i++)
 			if (nodes[first + i].canSetFollower())
 				ways++;
@@ -155,8 +153,8 @@ namespace kar {
 
 	inline void CityContainer::cancelFollower(int wayKnight)
 	{
-		auto nbNodesChecked = addedNumberOfNodesLogs.last();
-		auto first = nodes.length() - nbNodesChecked;
+		const auto nbNodesChecked = addedNumberOfNodesLogs.last();
+		const auto first = nodes.length() - nbNodesChecked;
 		auto ways = 0;
 
 		for (auto i = 0; i < nbNodesChecked; i++) {

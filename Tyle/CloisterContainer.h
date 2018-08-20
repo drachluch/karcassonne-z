@@ -2,10 +2,12 @@
 #include "first.h"
 #include <vector>
 #include "Array.h"
-#include "BlocStatic.h"
 #include "Position.h"
 #include "Cloister.h"
 #include "CloisterIterator.h"
+
+#include "Followers.h"
+#include "Scores.h"
 
 namespace kar {
 
@@ -13,8 +15,6 @@ namespace kar {
 	{
 	public:
 		using Cloisters = Array<Cloister, NUMBER_OF_CLOISTERS>;
-		using Followers = BlocStatic<char, NUMBER_OF_PLAYERS>;
-		using Scores = BlocStatic<int, NUMBER_OF_PLAYERS>;
 		using Logs = std::vector<bool>;
 
 	private:
@@ -47,8 +47,8 @@ namespace kar {
 		inline const Followers & getBusyFollowers() const { return busyFollowers; }
 	};
 
-	void updateCompletenessOfCloisters(const Position & p, Array<Cloister, NUMBER_OF_CLOISTERS>& cloisters, BlocStatic<int, NUMBER_OF_PLAYERS>& scores, BlocStatic<char, NUMBER_OF_PLAYERS>& followers);
-	void rollBackCompletenessOfCloisters(const Position & p, Array<Cloister, NUMBER_OF_CLOISTERS>& cloisters, BlocStatic<int, NUMBER_OF_PLAYERS>& scores, BlocStatic<char, NUMBER_OF_PLAYERS>& followers);
+	void updateCompletenessOfCloisters(const Position & p, Array<Cloister, NUMBER_OF_CLOISTERS>& cloisters, Scores& scores, Followers& followers);
+	void rollBackCompletenessOfCloisters(const Position & p, Array<Cloister, NUMBER_OF_CLOISTERS>& cloisters, Scores& scores, Followers& followers);
 
 	
 

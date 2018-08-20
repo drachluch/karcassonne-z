@@ -1,4 +1,5 @@
 #include "MainTest2.h"
+#include "Game.h"
 #include "Drawer.h"
 #include <iostream>
 

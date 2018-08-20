@@ -2,7 +2,7 @@
 
 namespace kar {
 
-	void updateCompletenessOfCloisters(const Position & p, Array<Cloister, NUMBER_OF_CLOISTERS>& cloisters, BlocStatic<int, NUMBER_OF_PLAYERS>& scores, BlocStatic<char, NUMBER_OF_PLAYERS>& followers) {
+	void updateCompletenessOfCloisters(const Position & p, Array<Cloister, NUMBER_OF_CLOISTERS>& cloisters, Scores& scores, Followers& followers) {
 		for (auto i = 0; i < cloisters.length(); i++) {
 			auto & c = cloisters[i];
 			if (c.withinRange(p)) {
@@ -16,7 +16,7 @@ namespace kar {
 		}
 	}
 
-	void rollBackCompletenessOfCloisters(const Position & p, Array<Cloister, NUMBER_OF_CLOISTERS>& cloisters, BlocStatic<int, NUMBER_OF_PLAYERS>& scores, BlocStatic<char, NUMBER_OF_PLAYERS>& followers) {
+	void rollBackCompletenessOfCloisters(const Position & p, Array<Cloister, NUMBER_OF_CLOISTERS>& cloisters, Scores& scores, Followers& followers) {
 		for (auto i = 0; i < cloisters.length(); i++) {
 			auto & c = cloisters[i];
 			if (c.withinRange(p)) {
