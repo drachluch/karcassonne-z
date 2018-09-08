@@ -4,7 +4,7 @@ Little steps forward in making AI for Carcassonne.
 
 
 The program simulates a play of [Carcassonne](https://en.wikipedia.org/wiki/Carcassonne_(board_game)), played by only one player.
-The player try to get the higher score, by setting followers and tiles to completethe board.
+The player try to get the higher score, by setting followers and tiles to complete the board.
 
 You can configure the player to set followers :
 - only on cloisters (command : Tylez.exe c > output.html);
