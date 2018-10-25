@@ -1,5 +1,5 @@
 # karcassonne-z
-Little steps forward in making AI for Carcassonne.
+Little steps forward to making AI for Carcassonne.
 
 
 
